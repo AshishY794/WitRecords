@@ -14,13 +14,19 @@
 <body>
   <h1>WitBlox PCB's Records</h1>
   <!-- Container for the spreadsheet -->
-  <h2>Available PCB In Stock</h2>
+  <h2>Available PCB's In Stock</h2>
   <div id="spreadsheetWrapper" class="spreadsheet-wrapper"></div>
+    <!-- Container for buttons -->
+    <div class="button-area">
+      <button id="csvDownloadBtn">Download CSV</button>
+    </div>
+<br>
+  <!-- Container for the spreadsheet without PCBs in stock -->
+  <h2>No PCB's In Stock</h2>
+  <div id="spreadsheetWrapperNoStock" class="spreadsheet-wrapper"></div>
 
-  <!-- Container for buttons -->
-  <div class="button-area">
-    <button id="csvDownloadBtn">Download CSV</button>
-  </div>
+
+
   <br><br>
 
   <div id="bloxNameModal" class="modal">
@@ -153,6 +159,8 @@
       document.getElementById('saveDataBtn').style.display = 'block'; // Show the Save button
       container.style.display = 'block'; // Display the spreadsheet container
     }
+
+    
 
     // Function to populate blox name modal with checkboxes
     function populateBloxNameModal() {
@@ -432,6 +440,75 @@
 
 
 
+
+    // no pcb in stock 
+
+
+    // Function to initialize Handsontable instance for no PCBs in stock
+async function initializeNoStockSpreadsheet() {
+  const container = document.getElementById('spreadsheetWrapperNoStock');
+
+  // Fetch all blox names from Firestore
+  let allBloxNames = [];
+  try {
+    const querySnapshot = await getDocs(collection(db, 'sheetData'));
+    querySnapshot.forEach((doc) => {
+      const data = doc.data().data;
+      data.forEach(row => {
+        if (row.bloxName && !allBloxNames.includes(row.bloxName)) {
+          allBloxNames.push(row.bloxName);
+        }
+      });
+    });
+  } catch (error) {
+    console.error("Error getting documents: ", error);
+    alert("Failed to retrieve PCB records from Firestore.");
+    return;
+  }
+
+  // Define the list of all blox names
+  const allBloxNamesSet = new Set(allBloxNames);
+
+  // Define the list of blox names you want to check
+  const bloxNamesToCheck = [
+    'Power', 'Lamp', 'Buzzer', 'Invert', 'Dark', 'Distance', 'IR', 'Motor Driver',
+    'Wire Tap', 'Button', 'AI', 'Wifi Clip V1', 'wifi Clip V2', 'Servo', 'Logic Gate',
+    'Toggle', 'Touch', 'Laser', 'Solar', 'Heat', 'New TX-RX', 'Old TX-RX', 'Magnet',
+    'Record And Repete', 'AI Chat', 'Clap', 'Tongee'
+  ];
+
+  // Filter out blox names that are not in PCB records
+  const bloxNamesNotInRecords = bloxNamesToCheck.filter(bloxName => !allBloxNamesSet.has(bloxName));
+
+  // Create the data array for Handsontable with blox names not in records
+  const data = bloxNamesNotInRecords.map(bloxName => ({
+    bloxName: bloxName,
+    reminder: 0 // Set reminder to 0 for blox names not in records
+  }));
+
+  // Create a new Handsontable instance with read-only configuration
+  const hotInstance = new Handsontable(container, {
+    data: data,
+    rowHeaders: true,
+    colHeaders: ['Blox Name', 'Reminder'],
+    columns: [
+      { data: 'bloxName' },
+      { data: 'reminder', type: 'numeric' }
+    ],
+    minSpareRows: 1, // Allow adding new rows
+    readOnly: true, // Make the spreadsheet view-only
+    stretchH: 'all',
+    height: 200,
+    licenseKey: 'non-commercial-and-evaluation'
+  });
+
+  container.style.display = 'block'; // Display the spreadsheet container
+}
+
+// Event listener for when the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', function () {
+  initializeNoStockSpreadsheet();
+});
 
 
 
