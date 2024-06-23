@@ -160,7 +160,7 @@
       const form = document.getElementById('bloxNameForm');
 
       // Replace this with your actual blox names data source
-      const bloxNames = ['Power', 'Lamp', 'Buzzer', 'Invert', 'Dark', 'Distance', 'IR', 'Motor Driver', 'Wire Tap', 'Button', 'AI', 'Wifi Clip V1', 'wifi Clip V2', 'Servo', 'Logic Gate','Toggle','Touch','Laser', 'Solar', 'Heat', 'New TX-RX', 'Magnet', 'Record And Repete', 'AI Chat', 'Clap', 'Tongee'];
+      const bloxNames = ['Power', 'Lamp', 'Buzzer', 'Invert', 'Dark', 'Distance', 'IR', 'Motor Driver', 'Wire Tap', 'Button', 'AI', 'Wifi Clip V1', 'wifi Clip V2', 'Servo', 'Logic Gate','Toggle','Touch','Laser', 'Solar', 'Heat', 'New TX-RX', 'Old TX-RX', 'Magnet', 'Record And Repete', 'AI Chat', 'Clap', 'Tongee'];
 
       // Clear previous checkboxes
       form.innerHTML = '';
@@ -484,7 +484,7 @@
     // Define the preferred order of blox names
     const preferredOrder = [
       "Power", "Lamp", "Buzzer", "Invert", "Dark", "Distance",  "IR", 
-      "Motor Driver", "Wire Tap", "Button", "AI", "wifi Clip V2", "Servo", "Logic Gate"
+      "Motor Driver", "Wire Tap", "Button", "AI", "Wifi Clip V1", "wifi Clip V2", "Servo", "Logic Gate"
     ];
 
     // Sort allData to place preferred blox names first, then alphabetical
