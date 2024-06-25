@@ -13,8 +13,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      text-align:  center;
-
+      text-align: center;
     }
 
     .section {
@@ -28,6 +27,10 @@
       text-align: center;
       cursor: pointer;
       transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+      position: relative;
+      background-size: cover;
+      background-position: center;
+      color: white; /* Adjust text color for better readability */
     }
 
     .section:hover {
@@ -37,40 +40,81 @@
 
     .section h2 {
       margin-bottom: 10px;
-      color: #333;
+      color: white; /* Ensure the text is visible on the background image */
     }
 
     .section p {
-      color: #666;
+      color: white; /* Ensure the text is visible on the background image */
     }
+
+    .section::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5); /* Dark overlay for better text readability */
+      border-radius: 8px;
+      z-index: 1;
+    }
+
+    .section-content {
+      position: relative;
+      z-index: 2;
+    }
+    .logo {
+      width: 70px;
+            max-width: 100%;
+            height: auto;
+            /* margin-bottom: 8px; Space between logo and heading */
+        }
+
+        h1 {
+            color: #333;
+            margin: 0;
+            margin-bottom: 8px;
+
+        }
   </style>
 </head>
 <body>
+  <img src="Components/Images/WitBlox Logo.png" alt="WitBlox Logo" class="logo">
   <h1>WitBlox Record Room</h1>
 
   <!-- PCB Record Section -->
-  <div class="section" onclick="navigateTo('Components/pcbrecord.html')">
-    <h2>PCB Record</h2>
-    <p>Click here to manage PCB records.</p>
+  <div class="section" onclick="navigateTo('Components/pcbrecord.html')" style="background-image: url('Components/Images/power.png');">
+    <div class="section-content">
+      <h2>PCB Record</h2>
+      <p>Click here to manage PCB records.</p>
+    </div>
+  </div>
+
+  
+  <!-- Sheet Section -->
+  <div class="section" onclick="navigateTo('Components/dipaksirrecord.html')" style="background-image: url('Components/Images/record.png');">
+    <div class="section-content">
+      <h2>Dipak Sir Records</h2>
+      <p>Click here to view or manage Dipak Sir Records data.</p>
+    </div>
   </div>
 
   <!-- Component Record Section -->
-  <div class="section" onclick="navigateTo('component.html')">
-    <h2>Component Record</h2>
-    <p>Click here to manage component records.</p>
+  <div class="section" onclick="navigateTo('Components/componentsrecord.html')" style="background-image: url('Components/Images/registers.jpg');">
+    <div class="section-content">
+      <h2>Component Record</h2>
+      <p>Click here to manage component records.</p>
+    </div>
   </div>
 
-  <!-- Sheet Section -->
-  <div class="section" onclick="navigateTo('Components/dipaksirrecord.html')">
-    <h2>Dipak Sir Records</h2>
-    <p>Click here to view or manage Dipak Sir Records data.</p>
-  </div>
 
-  <!-- Data Record Section -->
-  <div class="section" onclick="navigateTo('')">
-    <h2>Data Record</h2>
-    <p>Click here to view or manage data records.</p>
-  </div>
+  <!-- Data Record Section
+  <div class="section" onclick="navigateTo('')" style="background-image: url('Components/Images/data.png');">
+    <div class="section-content">
+      <h2>Data Record</h2>
+      <p>Click here to view or manage data records.</p>
+    </div>
+  </div> -->
 
   <script>
     function navigateTo(url) {
