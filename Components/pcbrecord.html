@@ -441,70 +441,7 @@
 
 
 
-    // no pcb in stock 
-
-
-    // // Function to initialize Handsontable instance for no PCBs in stock
-    // async function initializeNoStockSpreadsheet() {
-    //   const container = document.getElementById('spreadsheetWrapperNoStock');
-
-    //   // Fetch all blox names from Firestore
-    //   let allBloxNames = [];
-    //   try {
-    //     const querySnapshot = await getDocs(collection(db, 'sheetData'));
-    //     querySnapshot.forEach((doc) => {
-    //       const data = doc.data().data;
-    //       data.forEach(row => {
-    //         if (row.bloxName && !allBloxNames.includes(row.bloxName)) {
-    //           allBloxNames.push(row.bloxName);
-    //         }
-    //       });
-    //     });
-    //   } catch (error) {
-    //     console.error("Error getting documents: ", error);
-    //     alert("Failed to retrieve PCB records from Firestore.");
-    //     return;
-    //   }
-
-    //   // Define the list of all blox names
-    //   const allBloxNamesSet = new Set(allBloxNames);
-
-    //   // Define the list of blox names you want to check
-    //   const bloxNamesToCheck = [
-    //     'Power', 'Lamp', 'Buzzer', 'Invert', 'Dark', 'Distance', 'IR', 'Motor Driver',
-    //     'Wire Tap', 'Button', 'AI', 'Wifi Clip V1', 'wifi Clip V2', 'Servo', 'Logic Gate',
-    //     'Toggle', 'Touch', 'Laser', 'Solar', 'Heat', 'New TX-RX', 'Old TX-RX', 'Magnet',
-    //     'Record And Repete', 'AI Chat', 'Clap', 'Tongee'
-    //   ];
-
-    //   // Filter out blox names that are not in PCB records
-    //   const bloxNamesNotInRecords = bloxNamesToCheck.filter(bloxName => !allBloxNamesSet.has(bloxName));
-
-    //   // Create the data array for Handsontable with blox names not in records
-    //   const data = bloxNamesNotInRecords.map(bloxName => ({
-    //     bloxName: bloxName,
-    //     reminder: 0 // Set reminder to 0 for blox names not in records
-    //   }));
-
-    //   // Create a new Handsontable instance with read-only configuration
-    //   const hotInstance = new Handsontable(container, {
-    //     data: data,
-    //     rowHeaders: true,
-    //     colHeaders: ['Blox Name', 'Reminder'],
-    //     columns: [
-    //       { data: 'bloxName' },
-    //       { data: 'reminder', type: 'numeric' }
-    //     ],
-    //     minSpareRows: 1, // Allow adding new rows
-    //     readOnly: true, // Make the spreadsheet view-only
-    //     stretchH: 'all',
-    //     height: 200,
-    //     licenseKey: 'non-commercial-and-evaluation'
-    //   });
-
-    //   container.style.display = 'block'; // Display the spreadsheet container
-    // }
-
+ 
     // Event listener for when the DOM is fully loaded
     document.addEventListener('DOMContentLoaded', function () {
       initializeNoStockSpreadsheet();
@@ -515,104 +452,152 @@
     let hotInstance; // Handsontable instance
 
     async function initializeSpreadsheet() {
-      const container = document.getElementById('spreadsheetWrapper');
+  const container = document.getElementById('spreadsheetWrapper');
 
-      // Destroy any existing Handsontable instance if it exists
-      if (hotInstance) {
-        hotInstance.destroy();
-      }
+  // Destroy any existing Handsontable instance if it exists
+  if (hotInstance) {
+    hotInstance.destroy();
+  }
 
-      // Fetch data from Firestore
-      let allData = [];
-      let bloxNamesWithZeroReminder = []; // Track blox with 0 reminder
-      try {
-        const querySnapshot = await getDocs(collection(db, 'sheetData'));
-        const bloxData = {};
+  // Fetch data from Firestore
+  let allData = [];
+  let bloxNamesWithZeroReminder = []; // Track blox with 0 reminder
 
-        querySnapshot.forEach((doc) => {
-          const data = doc.data().data;
-          data.forEach(row => {
-            if (row.bloxName) {
-              if (row.reminder != null) {
-                if (bloxData[row.bloxName]) {
-                  bloxData[row.bloxName] += row.reminder;
-                } else {
-                  bloxData[row.bloxName] = row.reminder;
-                }
-              } else {
-                // Use input value when reminder is null or undefined
-                if (bloxData[row.bloxName]) {
-                  bloxData[row.bloxName] += row.input;
-                } else {
-                  bloxData[row.bloxName] = row.input;
-                }
-              }
+  try {
+    // Fetch data from 'sheetData' collection
+    const querySnapshot = await getDocs(collection(db, 'sheetData'));
+    const bloxData = {};
+
+    // Process data from 'sheetData'
+    querySnapshot.forEach((doc) => {
+      const data = doc.data().data;
+      data.forEach(row => {
+        if (row.bloxName) {
+          if (row.reminder != null) {
+            if (bloxData[row.bloxName]) {
+              bloxData[row.bloxName] += row.reminder;
+            } else {
+              bloxData[row.bloxName] = row.reminder;
             }
-          });
-        });
-
-        // Convert bloxData to an array of objects
-        allData = Object.keys(bloxData).map(bloxName => ({
-          bloxName,
-          reminder: bloxData[bloxName]
-        }));
-
-        // Collect blox names with a reminder of 0
-        bloxNamesWithZeroReminder = allData.filter(blox => blox.reminder === 0).map(blox => blox.bloxName);
-
-        // Filter out blox names with a reminder of 0 from allData
-        allData = allData.filter(blox => blox.reminder !== 0);
-
-        // Define the preferred order of blox names
-        const preferredOrder = [
-          "Power", "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR",
-          "Motor Driver", "Wire Tap", "Button", "AI", "Wifi Clip V1", "wifi Clip V2", "Servo", "Logic Gate"
-        ];
-
-        // Sort allData to place preferred blox names first, then alphabetical
-        allData.sort((a, b) => {
-          const indexA = preferredOrder.indexOf(a.bloxName);
-          const indexB = preferredOrder.indexOf(b.bloxName);
-          if (indexA === -1 && indexB === -1) {
-            // Both are not in preferredOrder, sort alphabetically
-            return a.bloxName.localeCompare(b.bloxName);
-          } else if (indexA === -1) {
-            // Only b is in preferredOrder
-            return 1;
-          } else if (indexB === -1) {
-            // Only a is in preferredOrder
-            return -1;
           } else {
-            // Both are in preferredOrder, compare their indices
-            return indexA - indexB;
+            // Use input value when reminder is null or undefined
+            if (bloxData[row.bloxName]) {
+              bloxData[row.bloxName] += row.input;
+            } else {
+              bloxData[row.bloxName] = row.input;
+            }
+          }
+        }
+      });
+    });
+
+    // Convert bloxData to an array of objects
+    allData = Object.keys(bloxData).map(bloxName => ({
+      bloxName,
+      reminder: bloxData[bloxName]
+    }));
+
+    // Define the preferred order of blox names
+    const preferredOrder = [
+      "Power", "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR",
+      "Motor Driver", "Wire Tap", "Button", "AI", "Wifi Clip V1", "wifi Clip V2", "Servo", "Logic Gate"
+    ];
+
+    // Sort allData to place preferred blox names first, then alphabetical
+    allData.sort((a, b) => {
+      const indexA = preferredOrder.indexOf(a.bloxName);
+      const indexB = preferredOrder.indexOf(b.bloxName);
+      if (indexA === -1 && indexB === -1) {
+        // Both are not in preferredOrder, sort alphabetically
+        return a.bloxName.localeCompare(b.bloxName);
+      } else if (indexA === -1) {
+        // Only b is in preferredOrder
+        return 1;
+      } else if (indexB === -1) {
+        // Only a is in preferredOrder
+        return -1;
+      } else {
+        // Both are in preferredOrder, compare their indices
+        return indexA - indexB;
+      }
+    });
+
+    // Function to fetch and process additional PCB data from a given collection
+    async function fetchAndProcessAdditionalPCBData(collectionName) {
+      const snapshot = await getDocs(collection(db, collectionName));
+      snapshot.forEach(doc => {
+        const data = doc.data().data;
+        data.forEach(row => {
+          const pcbName = row.bloxName;
+          const quantity = row.quantity;
+
+          // Find the matching bloxName in allData and update the reminder quantity
+          const existingPcb = allData.find(item => item.bloxName === pcbName);
+          if (existingPcb) {
+            if (collectionName === 'dipaksirrecord') {
+              existingPcb.reminder += quantity; // Add quantity from dipaksirrecord
+            } else if (collectionName === 'dipaksirrecordgiven') {
+              existingPcb.reminder -= quantity; // Subtract quantity from dipaksirrecordgiven
+            }
           }
         });
-
-      } catch (error) {
-        console.error("Error getting documents: ", error);
-      }
-
-      // Create a new Handsontable instance with read-only configuration
-      hotInstance = new Handsontable(container, {
-        data: allData, // Use filtered data
-        rowHeaders: true,
-        colHeaders: ['Blox Name', 'Reminder'],
-        columns: [
-          { data: 'bloxName' },
-          { data: 'reminder', type: 'numeric' }
-        ],
-        minSpareRows: 1, // Allow adding new rows
-        readOnly: true, // Make the spreadsheet view-only
-        stretchH: 'all',
-        height: 400,
-        licenseKey: 'non-commercial-and-evaluation'
       });
-
-      container.style.display = 'block'; // Display the spreadsheet container
-
-      // Initialize the No Stock Spreadsheet with updated blox names with zero reminders
-      initializeNoStockSpreadsheet(bloxNamesWithZeroReminder);
     }
+
+    // Fetch and process data from 'dipaksirrecord' collection
+    await fetchAndProcessAdditionalPCBData('dipaksirrecord');
+
+    // Fetch and process data from 'dipaksirrecordgiven' collection
+    await fetchAndProcessAdditionalPCBData('dipaksirrecordgiven');
+
+    // Check and subtract PCB quantities from 'dipaksirfinaldata' if they exist
+    const finalDataDocRef = doc(collection(db, 'dipaksirfinaldata'), 'AllPcbData');
+    const finalDataDocSnapshot = await getDoc(finalDataDocRef);
+
+    if (finalDataDocSnapshot.exists()) {
+      const finalData = finalDataDocSnapshot.data().data;
+
+      allData.forEach(item => {
+        const pcbName = item.bloxName;
+        const existingPcb = finalData[pcbName];
+
+        if (existingPcb) {
+          item.reminder -= existingPcb.totalQuantity;
+        }
+      });
+    }
+
+    // Collect blox names with a reminder of 0
+    bloxNamesWithZeroReminder = allData.filter(blox => blox.reminder === 0).map(blox => blox.bloxName);
+
+    // Filter out blox names with a reminder of 0 from allData
+    allData = allData.filter(blox => blox.reminder !== 0);
+
+  } catch (error) {
+    console.error("Error getting documents: ", error);
+  }
+
+  // Create a new Handsontable instance with read-only configuration
+  hotInstance = new Handsontable(container, {
+    data: allData, // Use filtered data
+    rowHeaders: true,
+    colHeaders: ['Blox Name', 'We Have'],
+    columns: [
+      { data: 'bloxName' },
+      { data: 'reminder', type: 'numeric' }
+    ],
+    minSpareRows: 1, // Allow adding new rows
+    readOnly: true, // Make the spreadsheet view-only
+    stretchH: 'all',
+    height: 400,
+    licenseKey: 'non-commercial-and-evaluation'
+  });
+
+  container.style.display = 'block'; // Display the spreadsheet container
+
+  // Initialize the No Stock Spreadsheet with updated blox names with zero reminders
+  initializeNoStockSpreadsheet(bloxNamesWithZeroReminder);
+}
 
     // Function to initialize Handsontable instance for no PCBs in stock
     async function initializeNoStockSpreadsheet(bloxNamesWithZeroReminder = []) {
@@ -671,7 +656,7 @@
       const hotInstance = new Handsontable(container, {
         data: data,
         rowHeaders: true,
-        colHeaders: ['Blox Name', 'Reminder'],
+        colHeaders: ['Blox Name', 'We Have'],
         columns: [
           { data: 'bloxName' },
           { data: 'reminder', type: 'numeric' }
