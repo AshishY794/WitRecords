@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shirkhe Sir's PCB Record</title>
+    <link rel="stylesheet" href="https://handsontable.com/static/css/main.css">
+    <style>
+        .htCenter {
+            text-align: center;
+        }
+
+        #summaryContainer h2 {
+            text-align: center;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #container {
+            margin: 0 auto;
+            width: 80%;
+        }
+
+        #summaryTable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        #summaryTable th,
+        #summaryTable td {
+            border: 1px solid #dddddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        #summaryTable th {
+            background-color: #f2f2f2;
+        }
+
+        #summaryTable tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        #summaryTable tr:hover {
+            background-color: #e9e9e9;
+        }
+
+        #loading {
+            text-align: center;
+            font-size: 18px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        /* Styling for the select box */
+        #pcbSelect {
+            padding: 10px 15px;
+            /* Padding inside the select box */
+            font-size: 16px;
+            /* Font size */
+            border: 1px solid #ccc;
+            /* Border color */
+            border-radius: 5px;
+            /* Rounded corners */
+            background-color: #f2f2f2;
+            /* Background color */
+            color: #333;
+            /* Text color */
+            cursor: pointer;
+            /* Pointer cursor */
+            outline: none;
+            /* Remove default focus outline */
+            transition: border-color 0.3s ease;
+            /* Smooth transition for border color */
+        }
+
+        /* Hover state */
+        #pcbSelect:hover {
+            border-color: #999;
+            /* Darker border color on hover */
+        }
+
+        /* Focus state */
+        #pcbSelect:focus {
+            border-color: #66afe9;
+            /* Highlight color on focus */
+            box-shadow: 0 0 5px rgba(102, 175, 233, 0.6);
+            /* Light shadow on focus */
+        }
+
+        label {
+            font-weight: bold;
+            margin-right: 10px;
+            /* Adjust spacing between label and select */
+        }
+
+        /* Style for the select element */
+        #pcbSelect2 {
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            min-width: 200px;
+            /* Adjust width as needed */
+        }
+
+        /* Optional: Style the options within the select dropdown */
+        #pcbSelect2 option {
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <h1>Shirkhe Sir has these PCBs</h1>
+
+        <div id="summaryContainer" style="margin-top: 20px;">
+            <!-- <h2>Summary of PCBs and Quantities</h2> -->
+            <div id="spreadsheetWrapper"></div>
+        </div>
+
+        <div id="loading">Loading data, please wait...</div>
+        <br>
+
+        <label for="pcbSelect">Select PCB (Send PCB To Shirkhe Sir): </label>
+        <select id="pcbSelect">
+            <option value="">Select PCB</option>
+        </select>
+
+        <div id="spreadsheetWrapperEdit" style="margin-top: 20px; display: none;"></div>
+        <button id="saveBtn" style="display: none;">Save</button>
+        <button id="cancelBtn" style="display: none;">Cancel</button> <!-- Cancel button for first dropdown -->
+
+
+        <br><br>
+
+        <label for="pcbSelect2">Select PCB (PCB Came From Shirkhe sir): </label>
+        <select id="pcbSelect2">
+            <option value="">Select PCB</option>
+        </select>
+
+        <div id="spreadsheetWrapperEdit2" style="margin-top: 20px; display: none;"></div>
+        <button id="saveBtn2" style="display: none;">Save</button>
+        <button id="cancelBtn2" style="display: none;">Cancel</button> <!-- Cancel button for second dropdown -->
+        <br><br>
+        <center> <a href="../index.html"><Button>Home</Button></a></center>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/handsontable@latest/dist/handsontable.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable@latest/dist/handsontable.full.min.css">
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-app.js';
+        import { getFirestore, collection, doc, writeBatch, getDocs, query, orderBy, limit, startAfter, getDoc } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0jbQgXGYAvX2znLQLflVfXUjREwl3JyY",
+            authDomain: "officetest-92e0d.firebaseapp.com",
+            projectId: "officetest-92e0d",
+            storageBucket: "officetest-92e0d.appspot.com",
+            messagingSenderId: "435215452631",
+            appId: "1:435215452631:web:75cd4ea4fb4d07b65be392"
+        };
+
+        // Array of PCB names
+        const pcbNames = [
+            "Power", "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR", "Motor Driver", "Wire Tap", "Button",
+            "AI", "Wifi Clip V1", "Wifi Clip V2", "Servo", "Logic Gate", "Toggle", "Touch", "Laser", "Solar", "Heat",
+            "New TX-RX", "Old TX-RX", "Magnet", "Record And Repeat", "AI Chat", "Clap", "Tongee"
+        ];
+
+        // Function to populate the first PCB select dropdown
+        function populatePCBSelect() {
+            const select = document.getElementById('pcbSelect');
+
+            // Clear existing options
+            select.innerHTML = '<option value="">Select PCB</option>';
+
+            // Add options for each PCB name
+            pcbNames.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            });
+        }
+
+        // Function to populate the second PCB select dropdown
+        function populatePCBSelect2() {
+            const select = document.getElementById('pcbSelect2');
+
+            // Clear existing options
+            select.innerHTML = '<option value="">Select PCB</option>';
+
+            // Add options for each PCB name
+            pcbNames.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            });
+        }
+
+        // Call the function to populate both select dropdowns
+        populatePCBSelect();
+        populatePCBSelect2();
+
+        // --------------------------------------------------------------------------------------------------------------
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        let hotInstance; // Handsontable instance for first dropdown
+        let hotInstance2; // Handsontable instance for second dropdown
+        let allData = []; // Store all data for first dropdown here
+        let allData2 = []; // Store all data for second dropdown here
+
+        window.addEventListener('load', async () => {
+            await displaySummaryTable();
+        });
+
+        document.getElementById('pcbSelect').addEventListener('change', async function () {
+            const selectedPCB = this.value;
+
+            if (selectedPCB) {
+                await initializeSpreadsheet(selectedPCB, 'spreadsheetWrapperEdit', 'saveBtn', hotInstance, allData, 'Shirkhesirrecord');
+            } else {
+                hideSpreadsheet('spreadsheetWrapperEdit', 'saveBtn');
+            }
+        });
+
+        document.getElementById('pcbSelect2').addEventListener('change', async function () {
+            const selectedPCB = this.value;
+
+            if (selectedPCB) {
+                await initializeSpreadsheet(selectedPCB, 'spreadsheetWrapperEdit2', 'saveBtn2', hotInstance2, allData2, 'Shirkhesirrecordgiven');
+            } else {
+                hideSpreadsheet('spreadsheetWrapperEdit2', 'saveBtn2');
+            }
+        });
+
+        async function fetchPCBData(pcbName, batchSize = 10, collectionType = 'Shirkhesirrecord') {
+            let lastVisible = null;
+            let fetchedData = [];
+
+            while (true) {
+                const q = query(
+                    collection(db, collectionType, pcbName, 'data'),
+                    orderBy('date'),
+                    startAfter(lastVisible || 0),
+                    limit(batchSize)
+                );
+
+                const querySnapshot = await getDocs(q);
+                if (querySnapshot.empty) break;
+
+                querySnapshot.forEach((doc) => {
+                    fetchedData.push(doc.data());
+                });
+
+                lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
+            }
+
+            return fetchedData;
+        }
+
+        async function initializeSpreadsheet(pcbName, wrapperId, saveBtnId, hotInstanceRef, allDataRef, collectionType) {
+            const container = document.getElementById(wrapperId);
+
+            if (!container) {
+                console.error(`Container ${wrapperId} not found.`);
+                return;
+            }
+
+            // Fetch existing data for the selected PCB from Firestore
+            allDataRef = await fetchPCBData(pcbName, 20, collectionType);
+
+            // Add a new row for new entries
+            allDataRef.push({
+                date: new Date().toISOString().split('T')[0], // Current date
+                quantity: ''
+            });
+
+            // Create a new Handsontable instance with read-only configuration
+            hotInstanceRef = new Handsontable(container, {
+                data: allDataRef,
+                rowHeaders: true,
+                colHeaders: ['Date', 'Quantity'],
+                columns: [
+                    { data: 'date', readOnly: true },
+                    { data: 'quantity', type: 'numeric' }
+                ],
+                minSpareRows: 1,
+                stretchH: 'all',
+                height: 400, // Initial height
+                licenseKey: 'non-commercial-and-evaluation',
+            });
+
+            // Calculate the height of spreadsheetWrapperEdit based on its content
+            const totalRowsHeight = (allDataRef.length + 1) * 25; // Assuming row height is 25px, add extra row
+            const minHeight = 150; // Minimum height
+            const height = Math.max(totalRowsHeight, minHeight);
+            container.style.height = height + 'px';
+
+            container.style.display = 'block'; // Display the spreadsheet container
+
+            // Hide loading text
+            document.getElementById('loading').style.display = 'none';
+
+            // Show save button
+            document.getElementById(saveBtnId).style.display = 'inline';
+            document.getElementById(`cancelBtn${wrapperId === 'spreadsheetWrapperEdit' ? '' : '2'}`).style.display = 'inline';
+
+            // Update the global references
+            if (wrapperId === 'spreadsheetWrapperEdit') {
+                hotInstance = hotInstanceRef;
+                allData = allDataRef;
+            } else if (wrapperId === 'spreadsheetWrapperEdit2') {
+                hotInstance2 = hotInstanceRef;
+                allData2 = allDataRef;
+            }
+        }
+
+        function hideSpreadsheet(wrapperId, saveBtnId) {
+            document.getElementById(wrapperId).style.display = 'none';
+            document.getElementById(saveBtnId).style.display = 'none';
+        }
+
+        async function displaySummaryTable() {
+            const summaryContainer = document.getElementById('spreadsheetWrapper');
+
+            if (!summaryContainer) {
+                console.error('Summary container not found.');
+                return;
+            }
+
+            // Show loading message or spinner while fetching data
+            summaryContainer.innerHTML = '<center><p>Loading data...</p></center>';
+
+            const pcbData = {};
+
+            try {
+                const promises1 = pcbNames.map(name => fetchPCBData(name, 20, 'Shirkhesirrecord'));
+                const promises2 = pcbNames.map(name => fetchPCBData(name, 20, 'Shirkhesirrecordgiven'));
+
+                const results1 = await Promise.all(promises1);
+                const results2 = await Promise.all(promises2);
+
+                pcbNames.forEach((pcbName, index) => {
+                    const totalQuantity1 = results1[index].reduce((acc, data) => acc + data.quantity, 0);
+                    const totalQuantity2 = results2[index].reduce((acc, data) => acc + data.quantity, 0);
+
+                    const totalQuantity = totalQuantity1 - totalQuantity2;
+
+                    if (totalQuantity > 0) {
+                        pcbData[pcbName] = {
+                            totalQuantity: totalQuantity
+                        };
+                    }
+                });
+
+                // Once data is fetched, initialize Handsontable
+                initializeSummarySpreadsheet(pcbData);
+
+            } catch (error) {
+                console.error('Error fetching PCB data: ', error);
+                summaryContainer.innerHTML = '<p>Error loading data. Please try again.</p>';
+            }
+        }
+
+
+        function initializeSummarySpreadsheet(pcbData) {
+            const container = document.getElementById('spreadsheetWrapper');
+
+            // Destroy any existing Handsontable instance if it exists
+            if (hotInstance && hotInstance instanceof Handsontable) {
+                hotInstance.destroy();
+            }
+
+            // Prepare data for Handsontable
+            const data = Object.keys(pcbData).map(pcb => ({
+                pcbName: pcb,
+                quantity: pcbData[pcb].totalQuantity // Use totalQuantity instead of pcbData[pcb].quantity
+            }));
+
+            // Calculate height based on number of rows
+            const rowHeight = 25; // Adjust as per your row height in pixels
+            const headerHeight = 40; // Adjust as per your header height in pixels
+            const minHeight = 150; // Minimum height to prevent it from being too small
+
+            let height = data.length * rowHeight + headerHeight;
+            height = Math.max(height, minHeight); // Ensure minimum height
+
+            // Create a new Handsontable instance
+            hotInstance = new Handsontable(container, {
+                data: data,
+                rowHeaders: true,
+                colHeaders: ['PCB Name', 'Total Quantity'], // Change column header to Total Quantity
+                columns: [
+                    { data: 'pcbName', readOnly: true },
+                    { data: 'quantity', type: 'numeric', readOnly: true }
+                ],
+                minSpareRows: 0,
+                stretchH: 'all',
+                height: height + 'px', // Set calculated height
+                licenseKey: 'non-commercial-and-evaluation',
+            });
+
+            container.style.display = 'block'; // Display the spreadsheet container
+        }
+
+
+
+        document.getElementById('saveBtn').addEventListener('click', async () => {
+            if (!hotInstance) return;
+
+            const selectedPCB = document.getElementById('pcbSelect').value;
+            if (!selectedPCB) {
+                console.error('No PCB selected.');
+                return;
+            }
+
+            const updatedData = hotInstance.getData().slice(0, -1); // Exclude the last empty row
+            const batch = writeBatch(db);
+
+            // Fetch current quantity from 'Shirkhemaindata' if it exists
+            let currentQuantity = 0;
+            const mainDataDocRef = doc(collection(db, 'Shirkhemaindata'), selectedPCB);
+            const mainDataDocSnap = await getDoc(mainDataDocRef);
+            if (mainDataDocSnap.exists()) {
+                const mainData = mainDataDocSnap.data();
+                currentQuantity = mainData.quantity || 0;
+            }
+
+            updatedData.forEach((row, index) => {
+                const date = row[0];
+                const quantity = parseInt(row[1], 10); // Ensure quantity is an integer
+
+                if (isNaN(quantity)) {
+                    alert(`Invalid quantity value at row ${index + 1}: ${row[1]}`);
+                    return;
+                }
+
+                // Update 'Shirkhesirrecord' collection under selectedPCB/data
+                const docRef = doc(collection(db, 'Shirkhesirrecord', selectedPCB, 'data'), `entry${index + 1}`);
+                batch.set(docRef, { date, quantity });
+
+                // Calculate new total quantity for 'Shirkhemaindata'
+                const totalQuantity = currentQuantity + quantity;
+
+                // Update 'Shirkhemaindata' collection under selectedPCB with new total quantity
+                batch.set(mainDataDocRef, { pcbName: selectedPCB, quantity: totalQuantity });
+            });
+
+            try {
+                await batch.commit();
+                alert('Data saved successfully.');
+
+                // Hide Handsontable and clear data
+                hideHandsontable('spreadsheetWrapperEdit', 'saveBtn');
+
+            } catch (error) {
+                console.error('Error saving data: ', error);
+                alert('Error saving data. Please try again.');
+            }
+        });
+
+       
+
+        document.getElementById('saveBtn2').addEventListener('click', async () => {
+            if (!hotInstance2) return;
+
+            const selectedPCB = document.getElementById('pcbSelect2').value;
+            if (!selectedPCB) {
+                console.error('No PCB selected.');
+                return;
+            }
+
+            const updatedData = hotInstance2.getData().slice(0, -1); // Exclude the last empty row
+            const batch = writeBatch(db);
+
+            updatedData.forEach((row, index) => {
+                const date = row[0];
+                const quantity = parseInt(row[1], 10); // Ensure quantity is an integer
+
+                if (isNaN(quantity)) {
+                    alert(`Invalid quantity value at row ${index + 1}: ${row[1]}`);
+                    return;
+                }
+
+                const docRef = doc(collection(db, 'Shirkhesirrecordgiven', selectedPCB, 'data'), `entry${index + 1}`);
+                batch.set(docRef, { date, quantity });
+            });
+
+            try {
+                await batch.commit();
+                alert('Data saved successfully.');
+
+                // Hide Handsontable and clear data
+                hideHandsontable('spreadsheetWrapperEdit2', 'saveBtn2');
+
+            } catch (error) {
+                console.error('Error saving data: ', error);
+                alert('Error saving data. Please try again.');
+            }
+        });
+
+        function hideHandsontable(wrapperId, saveBtnId) {
+            // Hide Handsontable
+            document.getElementById(wrapperId).style.display = 'none';
+
+            // Hide save button
+            document.getElementById(saveBtnId).style.display = 'none';
+
+            // Hide cancel button
+            document.getElementById(`cancelBtn${wrapperId === 'spreadsheetWrapperEdit' ? '' : '2'}`).style.display = 'none';
+
+            // Optionally clear data (if needed)
+            if (wrapperId === 'spreadsheetWrapperEdit') {
+                hotInstance.destroy();
+                allData = []; // Clear data array
+            } else if (wrapperId === 'spreadsheetWrapperEdit2') {
+                hotInstance2.destroy();
+                allData2 = []; // Clear data array
+            }
+        }
+
+        // Function to handle cancel button click for the first Handsontable
+        document.getElementById('cancelBtn').addEventListener('click', function () {
+            const selectedPCB = document.getElementById('pcbSelect').value;
+            if (selectedPCB) {
+                hideHandsontable('spreadsheetWrapperEdit', 'saveBtn');
+            }
+        });
+
+        // Function to handle cancel button click for the second Handsontable
+        document.getElementById('cancelBtn2').addEventListener('click', function () {
+            const selectedPCB = document.getElementById('pcbSelect2').value;
+            if (selectedPCB) {
+                hideHandsontable('spreadsheetWrapperEdit2', 'saveBtn2');
+            }
+        });
+
+        function displaySummary(selectedPCB, filteredData) {
+            displaySummaryTable(); // Refresh the summary table with the updated data
+        }
+    </script>
+
+
+
+</body>
+
+</html>

@@ -451,36 +451,36 @@
     let hotInstance; // Handsontable instance
 
     async function initializeSpreadsheet() {
-      const container = document.getElementById('spreadsheetWrapper');
+    const container = document.getElementById('spreadsheetWrapper');
 
-      // Destroy any existing Handsontable instance if it exists
-      if (hotInstance) {
+    // Destroy any existing Handsontable instance if it exists
+    if (hotInstance) {
         hotInstance.destroy();
-      }
+    }
 
-      // Fetch data from Firestore
-      let allData = [];
+    // Fetch data from Firestore
+    let allData = [];
 
-      try {
+    try {
         // Fetch data from 'sheetData' collection
         const querySnapshot = await getDocs(collection(db, 'sheetData'));
         const bloxData = {};
 
         // Process data from 'sheetData'
         querySnapshot.forEach((doc) => {
-          const data = doc.data().data;
-          data.forEach(row => {
-            if (row.bloxName) {
-              const quantity = row.reminder != null ? row.reminder : row.input || 0;
-              bloxData[row.bloxName] = (bloxData[row.bloxName] || 0) + quantity;
-            }
-          });
+            const data = doc.data().data;
+            data.forEach(row => {
+                if (row.bloxName) {
+                    const quantity = row.reminder != null ? row.reminder : row.input || 0;
+                    bloxData[row.bloxName] = (bloxData[row.bloxName] || 0) + quantity;
+                }
+            });
         });
 
         // Convert bloxData to an array of objects
         allData = Object.keys(bloxData).map(bloxName => ({
-          bloxName,
-          reminder: bloxData[bloxName]
+            bloxName,
+            reminder: bloxData[bloxName]
         }));
 
         // Filter out data where reminder is 0
@@ -488,79 +488,102 @@
 
         // Define the preferred order of blox names
         const preferredOrder = [
-          "Power", "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR",
-          "Motor Driver", "Wire Tap", "Button", "AI", "Wifi Clip V1", "wifi Clip V2", "Servo", "Logic Gate"
+            "Power", "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR",
+            "Motor Driver", "Wire Tap", "Button", "AI", "Wifi Clip V1", "wifi Clip V2", "Servo", "Logic Gate"
         ];
 
         // Sort allData to place preferred blox names first, then alphabetical
         allData.sort((a, b) => {
-          const indexA = preferredOrder.indexOf(a.bloxName);
-          const indexB = preferredOrder.indexOf(b.bloxName);
-          if (indexA === -1 && indexB === -1) {
-            // Both are not in preferredOrder, sort alphabetically
-            return a.bloxName.localeCompare(b.bloxName);
-          } else if (indexA === -1) {
-            // Only b is in preferredOrder
-            return 1;
-          } else if (indexB === -1) {
-            // Only a is in preferredOrder
-            return -1;
-          } else {
-            // Both are in preferredOrder, compare their indices
-            return indexA - indexB;
-          }
+            const indexA = preferredOrder.indexOf(a.bloxName);
+            const indexB = preferredOrder.indexOf(b.bloxName);
+            if (indexA === -1 && indexB === -1) {
+                // Both are not in preferredOrder, sort alphabetically
+                return a.bloxName.localeCompare(b.bloxName);
+            } else if (indexA === -1) {
+                // Only b is in preferredOrder
+                return 1;
+            } else if (indexB === -1) {
+                // Only a is in preferredOrder
+                return -1;
+            } else {
+                // Both are in preferredOrder, compare their indices
+                return indexA - indexB;
+            }
         });
 
         // Fetch 'dipakmaindata' and subtract quantities from 'allData'
         const mainDataSnapshot = await getDocs(collection(db, 'dipakmaindata'));
         mainDataSnapshot.forEach((doc) => {
-          const { pcbName, quantity } = doc.data();
-          const index = allData.findIndex(item => item.bloxName === pcbName);
-          if (index !== -1) {
-            allData[index].reminder -= quantity;
-          }
+            const { pcbName, quantity } = doc.data();
+            const index = allData.findIndex(item => item.bloxName === pcbName);
+            if (index !== -1) {
+                allData[index].reminder -= quantity;
+            }
         });
 
-      } catch (error) {
-        console.error("Error getting documents: ", error);
-      }
+        // Fetch 'Shirkhemaindata' and subtract quantities from 'allData'
+        const shirkheDataSnapshot = await getDocs(collection(db, 'Shirkhemaindata'));
+        shirkheDataSnapshot.forEach((doc) => {
+            const { pcbName, quantity } = doc.data();
+            const index = allData.findIndex(item => item.bloxName === pcbName);
+            if (index !== -1) {
+                allData[index].reminder -= quantity;
+            }
+        });
 
-      // Create a new Handsontable instance with read-only configuration
-      hotInstance = new Handsontable(container, {
+    } catch (error) {
+        console.error("Error getting documents: ", error);
+    }
+
+    // Create a new Handsontable instance with read-only configuration
+    hotInstance = new Handsontable(container, {
         data: allData, // Use filtered and adjusted data
         rowHeaders: true,
         colHeaders: ['Blox Name', 'We Have'],
         columns: [
-          { data: 'bloxName' },
-          { data: 'reminder', type: 'numeric' }
+            { data: 'bloxName' },
+            { data: 'reminder', type: 'numeric' }
         ],
         minSpareRows: 1, // Allow adding new rows
         readOnly: true, // Make the spreadsheet view-only
         stretchH: 'all',
         height: 400,
         licenseKey: 'non-commercial-and-evaluation'
-      });
+    });
 
-      container.style.display = 'block'; // Display the spreadsheet container
+    container.style.display = 'block'; // Display the spreadsheet container
 
-      // Initialize other parts of your application as needed
+    // Initialize other parts of your application as needed
 
-      // Call fetchMainData to log 'dipakmaindata'
-      fetchMainData();
-    }
+    // Call fetchMainData to log 'dipakmaindata'
+    fetchMainData();
+    // Call fetchShirkheData to log 'Shirkhemaindata'
+    fetchShirkheData();
+}
 
-    async function fetchMainData() {
-      try {
+async function fetchMainData() {
+    try {
         const querySnapshot = await getDocs(collection(db, 'dipakmaindata'));
-
         querySnapshot.forEach((doc) => {
-          console.log(`${doc.id} => ${JSON.stringify(doc.data())}`);
-          // Access each document's data using doc.data()
+            console.log(`${doc.id} => ${JSON.stringify(doc.data())}`);
+            // Access each document's data using doc.data()
         });
-      } catch (error) {
+    } catch (error) {
         console.error("Error fetching 'dipakmaindata': ", error);
-      }
     }
+}
+
+async function fetchShirkheData() {
+    try {
+        const querySnapshot = await getDocs(collection(db, 'Shirkhemaindata'));
+        querySnapshot.forEach((doc) => {
+            console.log(`${doc.id} => ${JSON.stringify(doc.data())}`);
+            // Access each document's data using doc.data()
+        });
+    } catch (error) {
+        console.error("Error fetching 'Shirkhemaindata': ", error);
+    }
+}
 
 
     // Call initializeSpreadsheet to start initializing the spreadsheet
