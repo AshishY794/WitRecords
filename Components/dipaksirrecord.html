@@ -161,7 +161,7 @@
     <script type="module">
         // Import Firebase modules
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-app.js';
-        import { getFirestore, collection, doc, writeBatch, getDocs, query, orderBy, limit, startAfter } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-firestore.js';
+        import { getFirestore, collection, doc, writeBatch, getDocs, query, orderBy, limit, startAfter, getDoc } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-firestore.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyC0jbQgXGYAvX2znLQLflVfXUjREwl3JyY",
@@ -432,6 +432,15 @@
             const updatedData = hotInstance.getData().slice(0, -1); // Exclude the last empty row
             const batch = writeBatch(db);
 
+            // Fetch current quantity from 'dipakmaindata' if it exists
+            let currentQuantity = 0;
+            const mainDataDocRef = doc(collection(db, 'dipakmaindata'), selectedPCB);
+            const mainDataDocSnap = await getDoc(mainDataDocRef);
+            if (mainDataDocSnap.exists()) {
+                const mainData = mainDataDocSnap.data();
+                currentQuantity = mainData.quantity || 0;
+            }
+
             updatedData.forEach((row, index) => {
                 const date = row[0];
                 const quantity = parseInt(row[1], 10); // Ensure quantity is an integer
@@ -441,8 +450,15 @@
                     return;
                 }
 
+                // Update 'dipaksirrecord' collection under selectedPCB/data
                 const docRef = doc(collection(db, 'dipaksirrecord', selectedPCB, 'data'), `entry${index + 1}`);
                 batch.set(docRef, { date, quantity });
+
+                // Calculate new total quantity for 'dipakmaindata'
+                const totalQuantity = currentQuantity + quantity;
+
+                // Update 'dipakmaindata' collection under selectedPCB with new total quantity
+                batch.set(mainDataDocRef, { pcbName: selectedPCB, quantity: totalQuantity });
             });
 
             try {
@@ -457,6 +473,8 @@
                 alert('Error saving data. Please try again.');
             }
         });
+
+       
 
         document.getElementById('saveBtn2').addEventListener('click', async () => {
             if (!hotInstance2) return;
