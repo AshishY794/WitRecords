@@ -130,7 +130,13 @@
         </div>
 
         <div id="loading">Loading data, please wait...</div>
-        <br>
+    
+        <h1>Dipak Sir Given PCBs</h1>
+
+        <div id="spreadsheetWrapperView"></div>
+        <br><br>
+
+       
 
         <label for="pcbSelect">Select PCB (Send PCB To Dipak Sir): </label>
         <select id="pcbSelect">
@@ -154,6 +160,8 @@
         <button id="cancelBtn2" style="display: none;">Cancel</button> <!-- Cancel button for second dropdown -->
         <br><br>
         <center> <a href="../index.html"><Button>Home</Button></a></center>
+
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/handsontable@latest/dist/handsontable.full.min.js"></script>
@@ -377,7 +385,6 @@
             }
         }
 
-
         function initializeSummarySpreadsheet(pcbData) {
             const container = document.getElementById('spreadsheetWrapper');
 
@@ -474,45 +481,164 @@
             }
         });
 
-       
 
-        document.getElementById('saveBtn2').addEventListener('click', async () => {
-            if (!hotInstance2) return;
 
-            const selectedPCB = document.getElementById('pcbSelect2').value;
-            if (!selectedPCB) {
-                console.error('No PCB selected.');
-                return;
-            }
 
-            const updatedData = hotInstance2.getData().slice(0, -1); // Exclude the last empty row
-            const batch = writeBatch(db);
 
-            updatedData.forEach((row, index) => {
-                const date = row[0];
-                const quantity = parseInt(row[1], 10); // Ensure quantity is an integer
 
-                if (isNaN(quantity)) {
-                    alert(`Invalid quantity value at row ${index + 1}: ${row[1]}`);
-                    return;
-                }
 
-                const docRef = doc(collection(db, 'dipaksirrecordgiven', selectedPCB, 'data'), `entry${index + 1}`);
-                batch.set(docRef, { date, quantity });
-            });
+        let hotInstanceView;
 
-            try {
-                await batch.commit();
-                alert('Data saved successfully.');
+async function fetchPCBDataFromDipakSirGiven(pcbName, batchSize = 10) {
+    let lastVisible = null;
+    let fetchedData = [];
 
-                // Hide Handsontable and clear data
-                hideHandsontable('spreadsheetWrapperEdit2', 'saveBtn2');
+    while (true) {
+        const q = query(
+            collection(db, 'dipaksirgivendata2', pcbName, 'Data'),
+            orderBy('date'),
+            startAfter(lastVisible || 0),
+            limit(batchSize)
+        );
 
-            } catch (error) {
-                console.error('Error saving data: ', error);
-                alert('Error saving data. Please try again.');
-            }
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) break;
+
+        querySnapshot.forEach((doc) => {
+            fetchedData.push(doc.data());
         });
+
+        lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
+    }
+
+    return fetchedData;
+}
+
+async function retrieveAndDisplayDipakSirGivenData() {
+    const container = document.getElementById('spreadsheetWrapperView');
+
+    if (!container) {
+        console.error('Container element not found.');
+        return;
+    }
+
+    // Clear any existing Handsontable instance
+    if (hotInstanceView) {
+        hotInstanceView.destroy();
+    }
+
+    // Show loading message
+    container.innerHTML = ' <center><p>Loading data...</p></center>';
+
+    // Fetch all data from Firestore for dipaksirgivendata2
+    let pcbDataMap = {};
+    try {
+        // Fetch data in parallel for better performance
+        const fetchDataPromises = pcbNames.map(async (pcbName) => {
+            const data = await fetchPCBDataFromDipakSirGiven(pcbName);
+            data.forEach(entry => {
+                if (!pcbDataMap[pcbName]) {
+                    pcbDataMap[pcbName] = {
+                        quantity: 0
+                    };
+                }
+                pcbDataMap[pcbName].quantity += entry.quantity;
+            });
+        });
+
+        await Promise.all(fetchDataPromises);
+
+        console.log('Retrieved Data:', pcbDataMap); // Log the retrieved data
+    } catch (error) {
+        console.error('Error retrieving data:', error);
+        container.innerHTML = '<p>Error loading data. Please try again later.</p>';
+        return;
+    }
+
+    // Convert the pcbDataMap to an array for Handsontable
+    let allData = Object.keys(pcbDataMap).map(pcbName => {
+        return [pcbName, pcbDataMap[pcbName].quantity];
+    });
+
+    // Add an empty row to ensure there is always one blank row at the end
+    allData.push(['', '']);
+
+    // Clear loading message
+    container.innerHTML = '';
+
+    // Calculate the height to fit the data
+    const rowHeight = 23; // Default row height in Handsontable
+    const headerHeight = 25; // Estimated height of the table header
+    const dataHeight = allData.length * rowHeight;
+    const calculatedHeight = dataHeight + headerHeight + 2; // Adding a small buffer
+
+    // Create a new Handsontable instance to display all retrieved data
+    hotInstanceView = new Handsontable(container, {
+        data: allData,
+        rowHeaders: true,
+        colHeaders: ['PCB', 'Quantity'],
+        columns: [
+            { data: 0, readOnly: true }, // PCB column
+            { data: 1, type: 'numeric' } // Quantity column
+        ],
+        minSpareRows: 1,
+        stretchH: 'all',
+        height: calculatedHeight,
+        licenseKey: 'non-commercial-and-evaluation'
+    });
+
+    container.style.display = 'block'; // Display the spreadsheet container
+}
+
+retrieveAndDisplayDipakSirGivenData();
+
+
+
+
+
+document.getElementById('saveBtn2').addEventListener('click', async () => {
+    if (!hotInstance2) return;
+
+    const selectedPCB = document.getElementById('pcbSelect2').value;
+    if (!selectedPCB) {
+        console.error('No PCB selected.');
+        return;
+    }
+
+    const updatedData = hotInstance2.getData().slice(0, -1); // Exclude the last empty row
+    const batch = writeBatch(db);
+
+    updatedData.forEach((row, index) => {
+        const date = row[0];
+        const quantity = parseInt(row[1], 10); // Ensure quantity is an integer
+
+        if (isNaN(quantity)) {
+            alert(`Invalid quantity value at row ${index + 1}: ${row[1]}`);
+            return; // Skip saving this row if quantity is invalid
+        }
+
+        // Define the first document reference path
+        const docRef1 = doc(collection(db, 'dipaksirrecordgiven', selectedPCB, 'data'), `entry${index + 1}`);
+        batch.set(docRef1, { date, quantity });
+
+        // Define the second document reference path
+        const newDocRef2 = doc(db, 'dipaksirgivendata2', selectedPCB, 'Data', `entry${index + 1}`);
+        batch.set(newDocRef2, { date, quantity });
+    });
+
+    try {
+        await batch.commit();
+        alert('Data saved successfully.');
+
+        // Hide Handsontable and clear data
+        hideHandsontable('spreadsheetWrapperEdit2', 'saveBtn2');
+
+    } catch (error) {
+        console.error('Error saving data: ', error);
+        alert('Error saving data. Please try again.');
+    }
+});
+
 
         function hideHandsontable(wrapperId, saveBtnId) {
             // Hide Handsontable
