@@ -178,121 +178,121 @@
 
 
 
-    // Global variable to store selected blox names
-let selectedBloxNames = [];
+        // Global variable to store selected blox names
+        let selectedBloxNames = [];
 
-function populateBloxNameModal() {
-    const modal = document.getElementById('bloxNameModal');
-    const form = document.getElementById('bloxNameForm');
+        function populateBloxNameModal() {
+            const modal = document.getElementById('bloxNameModal');
+            const form = document.getElementById('bloxNameForm');
 
-    // Replace this with your actual blox names data source
-    const registerNames = ['1K ( 102 )', '10K ( 103 )', '100K ( 104 )', '1M ( 105 )', '2K2 ( 222 )', '150R ( 151 )', '150R Big ( 151 )', '680R ( 681 )', '33K ( 333 )', '47R ( 470 )', '470R ( 471 )', '330R ( 331 )', '2M2 ( 225 )', '33R ( 330 )'];
-    const capacitorNames = ['1nf ( 102 )', '10nf ( 103 )', '100nf ( 104 )', '680nf ( 684 )'];
-    const LedName = ['Red Led', 'Green Led', 'Lamp Led'];
-    const Transistors = ['PMBT2222A ( 1P )', 'PMMBT2907A ( 2P )'];
-    const Diode = ['SS14', 'SS24'];
-    const IC = ['LM311DR (5V) or AMS117 5V', 'AMS117 3.3V', '4050BT IC'];
-    const Fuse = ['Fuse'];
+            // Replace this with your actual blox names data source
+            const registerNames = ['1K ( 102 )', '10K ( 103 )', '100K ( 104 )', '1M ( 105 )', '2K2 ( 222 )', '150R ( 151 )', '150R Big ( 151 )', '680R ( 681 )', '33K ( 333 )', '47R ( 470 )', '470R ( 471 )', '330R ( 331 )', '2M2 ( 225 )', '33R ( 330 )'];
+            const capacitorNames = ['1nf ( 102 )', '10nf ( 103 )', '100nf ( 104 )', '680nf ( 684 )'];
+            const LedName = ['Red Led', 'Green Led', 'Lamp Led'];
+            const Transistors = ['PMBT2222A ( 1P )', 'PMMBT2907A ( 2P )'];
+            const Diode = ['SS14', 'SS24'];
+            const IC = ['LM311DR (5V) or AMS117 5V', 'AMS117 3.3V', '4050BT IC'];
+            const Fuse = ['Fuse'];
 
-    // Clear previous checkboxes
-    form.innerHTML = '';
+            // Clear previous checkboxes
+            form.innerHTML = '';
 
-    // Function to add checkboxes for a given category
-    function addCheckboxes(category, names) {
-        const heading = document.createElement('h3');
-        heading.textContent = category;
-        form.appendChild(heading);
+            // Function to add checkboxes for a given category
+            function addCheckboxes(category, names) {
+                const heading = document.createElement('h3');
+                heading.textContent = category;
+                form.appendChild(heading);
 
-        names.forEach((name) => {
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.name = 'componentName';
-            checkbox.value = name;
-            checkbox.id = name;
+                names.forEach((name) => {
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.name = 'componentName';
+                    checkbox.value = name;
+                    checkbox.id = name;
 
-            const label = document.createElement('label');
-            label.htmlFor = name;
-            label.appendChild(document.createTextNode(name));
+                    const label = document.createElement('label');
+                    label.htmlFor = name;
+                    label.appendChild(document.createTextNode(name));
 
-            form.appendChild(checkbox);
-            form.appendChild(label);
-            form.appendChild(document.createElement('br'));
-        });
-    }
-
-    // Add checkboxes for registers
-    addCheckboxes('Registers', registerNames);
-
-    // Add checkboxes for capacitors
-    addCheckboxes('Capacitors', capacitorNames);
-    addCheckboxes("LED's", LedName);
-    addCheckboxes("Transistors", Transistors);
-    addCheckboxes("Diode", Diode);
-    addCheckboxes("IC", IC);
-    addCheckboxes("Fuse", Fuse);
-
-    // Show the modal
-    modal.style.display = 'block';
-
-    // Close modal if close button or outside modal is clicked
-    modal.getElementsByClassName('close')[0].onclick = function () {
-        modal.style.display = 'none';
-    };
-
-    // Handle Add button click in the modal
-    document.getElementById('confirmBloxNamesBtn').onclick = function () {
-        selectedBloxNames = []; // Clear previous selections
-        const checkboxes = document.getElementsByName('componentName');
-        checkboxes.forEach((checkbox) => {
-            if (checkbox.checked) {
-                selectedBloxNames.push(checkbox.value);
+                    form.appendChild(checkbox);
+                    form.appendChild(label);
+                    form.appendChild(document.createElement('br'));
+                });
             }
-        });
 
-        // Update Handsontable column with selected blox names
-        updateBloxNameColumn(selectedBloxNames);
+            // Add checkboxes for registers
+            addCheckboxes('Registers', registerNames);
 
-        // Automatically fill Blox Name column with selected blox names
-        fillBloxNameColumn();
+            // Add checkboxes for capacitors
+            addCheckboxes('Capacitors', capacitorNames);
+            addCheckboxes("LED's", LedName);
+            addCheckboxes("Transistors", Transistors);
+            addCheckboxes("Diode", Diode);
+            addCheckboxes("IC", IC);
+            addCheckboxes("Fuse", Fuse);
 
-        // Close the modal
-        modal.style.display = 'none';
-    };
-}
+            // Show the modal
+            modal.style.display = 'block';
 
-// Function to update the Handsontable column with selected blox names
-function updateBloxNameColumn(selectedBloxNames) {
-    if (hot) {
-        hot.updateSettings({
-            columns: [
-                {
-                    data: 'componentName', editor: 'dropdown',
-                    source: selectedBloxNames
-                },
-                { data: 'input', type: 'numeric' },
-                { data: 'output', type: 'numeric' },
-                { data: 'reminder', readOnly: true }
-            ]
-        });
-    } else {
-        console.error('Handsontable instance not found');
-    }
-}
+            // Close modal if close button or outside modal is clicked
+            modal.getElementsByClassName('close')[0].onclick = function () {
+                modal.style.display = 'none';
+            };
 
-// Function to automatically fill Blox Name column with selected blox names
-function fillBloxNameColumn() {
-    if (hot) {
-        const data = selectedBloxNames.map(componentName => ({
-            componentName: componentName,
-            input: null,
-            output: null,
-            reminder: null
-        }));
-        hot.loadData(data);
-    } else {
-        console.error('Handsontable instance not found');
-    }
-}
+            // Handle Add button click in the modal
+            document.getElementById('confirmBloxNamesBtn').onclick = function () {
+                selectedBloxNames = []; // Clear previous selections
+                const checkboxes = document.getElementsByName('componentName');
+                checkboxes.forEach((checkbox) => {
+                    if (checkbox.checked) {
+                        selectedBloxNames.push(checkbox.value);
+                    }
+                });
+
+                // Update Handsontable column with selected blox names
+                updateBloxNameColumn(selectedBloxNames);
+
+                // Automatically fill Blox Name column with selected blox names
+                fillBloxNameColumn();
+
+                // Close the modal
+                modal.style.display = 'none';
+            };
+        }
+
+        // Function to update the Handsontable column with selected blox names
+        function updateBloxNameColumn(selectedBloxNames) {
+            if (hot) {
+                hot.updateSettings({
+                    columns: [
+                        {
+                            data: 'componentName', editor: 'dropdown',
+                            source: selectedBloxNames
+                        },
+                        { data: 'input', type: 'numeric' },
+                        { data: 'output', type: 'numeric' },
+                        { data: 'reminder', readOnly: true }
+                    ]
+                });
+            } else {
+                console.error('Handsontable instance not found');
+            }
+        }
+
+        // Function to automatically fill Blox Name column with selected blox names
+        function fillBloxNameColumn() {
+            if (hot) {
+                const data = selectedBloxNames.map(componentName => ({
+                    componentName: componentName,
+                    input: null,
+                    output: null,
+                    reminder: null
+                }));
+                hot.loadData(data);
+            } else {
+                console.error('Handsontable instance not found');
+            }
+        }
 
         // Event listener for Add Data button click
         document.getElementById('openSpreadsheetBtn').onclick = function () {
@@ -530,7 +530,7 @@ function fillBloxNameColumn() {
 
                 // Define the preferred order of blox names
                 const preferredOrder = [
-                    '1K ( 102 )', '10K ( 103 )', '100K ( 104 )', '1M ( 105 )', '2K2 ( 222 )', '150R ( 151 )', '150R Big ( 151 )', '680R ( 681 )', '33K ( 333 )', '47R ( 470 )', '470R ( 471 )', '330R ( 331 )', '2M2 ( 225 )', '33R ( 330 )','1nf ( 102 )', '10nf ( 103 )', '100nf ( 104 )', '680nf ( 684 )','Red Led', 'Green Led', 'Lamp Led','PMBT2222A ( 1P )', 'PMMBT2907A ( 2P )','SS14', 'SS24','LM311DR (5V) or AMS117 5V', 'AMS117 3.3V', '4050BT IC','Fuse'
+                    '1K ( 102 )', '10K ( 103 )', '100K ( 104 )', '1M ( 105 )', '2K2 ( 222 )', '150R ( 151 )', '150R Big ( 151 )', '680R ( 681 )', '33K ( 333 )', '47R ( 470 )', '470R ( 471 )', '330R ( 331 )', '2M2 ( 225 )', '33R ( 330 )', '1nf ( 102 )', '10nf ( 103 )', '100nf ( 104 )', '680nf ( 684 )', 'Red Led', 'Green Led', 'Lamp Led', 'PMBT2222A ( 1P )', 'PMMBT2907A ( 2P )', 'SS14', 'SS24', 'LM311DR (5V) or AMS117 5V', 'AMS117 3.3V', '4050BT IC', 'Fuse'
                 ];
 
                 // Sort allData to place preferred blox names first, then alphabetical

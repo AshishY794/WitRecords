@@ -17,9 +17,12 @@
   <h2>Available PCB's In Stock</h2>
   <div id="spreadsheetWrapper" class="spreadsheet-wrapper"></div>
   <!-- Container for buttons -->
+
   <div class="button-area">
     <button id="csvDownloadBtn">Download CSV</button>
   </div>
+  <h2>Available Blix PCB's In Stock </h2>
+  <div id="blixPcbsWrapper"></div>
   <br>
   <!-- Container for the spreadsheet without PCBs in stock -->
   <h2>No PCB's In Stock</h2>
@@ -28,7 +31,6 @@
 
 
   <br><br>
-
   <div id="bloxNameModal" class="modal">
     <div class="modal-content">
       <span class="close">&times;</span>
@@ -162,13 +164,22 @@
 
 
 
-    // Function to populate blox name modal with checkboxes
     function populateBloxNameModal() {
       const modal = document.getElementById('bloxNameModal');
       const form = document.getElementById('bloxNameForm');
 
       // Replace this with your actual blox names data source
-      const bloxNames = ['Power', 'Lamp', 'Buzzer', 'Invert', 'Dark', 'Distance', 'IR', 'Motor Driver', 'Wire Tap', 'Button', 'AI', 'Wifi Clip V1', 'wifi Clip V2', 'Servo', 'Logic Gate', 'Toggle', 'Touch', 'Laser', 'Solar', 'Heat', 'New TX-RX', 'Old TX-RX', 'Magnet', 'Record And Repete', 'AI Chat', 'Clap', 'Tongee'];
+      const bloxNames = [
+        'Power', 'Lamp', 'Buzzer', 'Invert', 'Dark', 'Distance', 'IR', 'Motor Driver',
+        'Wire Tap', 'Button', 'AI', 'Wifi Clip V1', 'wifi Clip V2', 'Servo', 'Logic Gate',
+        'Toggle', 'Touch', 'Laser', 'Solar', 'Heat', 'New TX-RX', 'Old TX-RX', 'Magnet',
+        'Record And Repete', 'AI Chat', 'Clap', 'Tongee'
+      ];
+
+      const blixPcbs = {
+        heading: 'BlixPcbs',
+        items: ['Blix Power', 'Blix Led', 'Blix Buzzer', 'Blix Not', 'Blix Motor Driver', 'Blix Distance', 'Blix IR', 'Blix Switch']
+      };
 
       // Clear previous checkboxes
       form.innerHTML = '';
@@ -189,6 +200,28 @@
         form.appendChild(document.createElement('br'));
       });
 
+      // Add heading for BlixPcbs
+      const headingLabel = document.createElement('h3');
+      headingLabel.appendChild(document.createTextNode(blixPcbs.heading));
+      form.appendChild(headingLabel);
+
+      // Add checkboxes for BlixPcbs items
+      blixPcbs.items.forEach((item) => {
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.name = 'bloxName';
+        checkbox.value = item;
+        checkbox.id = item;
+
+        const label = document.createElement('label');
+        label.htmlFor = item;
+        label.appendChild(document.createTextNode(item));
+
+        form.appendChild(checkbox);
+        form.appendChild(label);
+        form.appendChild(document.createElement('br'));
+      });
+
       // Show the modal
       modal.style.display = 'block';
 
@@ -199,7 +232,7 @@
 
       // Handle Add button click in the modal
       document.getElementById('confirmBloxNamesBtn').onclick = function () {
-        selectedBloxNames = []; // Clear previous selections
+        const selectedBloxNames = []; // Clear previous selections
         const checkboxes = document.getElementsByName('bloxName');
         checkboxes.forEach((checkbox) => {
           if (checkbox.checked) {
@@ -211,7 +244,7 @@
         updateBloxNameColumn(selectedBloxNames);
 
         // Automatically fill Blox Name column with selected blox names
-        fillBloxNameColumn();
+        fillBloxNameColumn(selectedBloxNames);
 
         // Close the modal
         modal.style.display = 'none';
@@ -238,7 +271,7 @@
     }
 
     // Function to automatically fill Blox Name column with selected blox names
-    function fillBloxNameColumn() {
+    function fillBloxNameColumn(selectedBloxNames) {
       if (hot) {
         const data = selectedBloxNames.map(bloxName => ({
           bloxName: bloxName,
@@ -252,20 +285,6 @@
       }
     }
 
-    // Event listener for Add Data button click
-    document.getElementById('openSpreadsheetBtn').onclick = function () {
-      populateBloxNameModal();
-    };
-
-    // Event listener for Add Data button click
-    document.getElementById('openSpreadsheetBtn').onclick = function () {
-      populateBloxNameModal();
-    };
-
-
-    document.getElementById('addBloxBtn').onclick = function () {
-      populateBloxNameModal();
-    };
 
 
     // Function to save data to Firestore
@@ -293,7 +312,20 @@
       }
     }
 
+    // Event listener for Add Data button click
+    document.getElementById('openSpreadsheetBtn').onclick = function () {
+      populateBloxNameModal();
+    };
 
+    // Event listener for Add Data button click
+    document.getElementById('openSpreadsheetBtn').onclick = function () {
+      populateBloxNameModal();
+    };
+
+
+    document.getElementById('addBloxBtn').onclick = function () {
+      populateBloxNameModal();
+    };
 
     // Function to reset the form
     function resetForm() {
@@ -448,110 +480,146 @@
     });
 
 
-    let hotInstance; // Handsontable instance
+    let hotInstance; // Handsontable instance for main data
+  let blixPcbsInstance; // Handsontable instance for Blix PCBs
 
-    async function initializeSpreadsheet() {
+  async function initializeSpreadsheet() {
     const container = document.getElementById('spreadsheetWrapper');
+    const blixContainer = document.getElementById('blixPcbsWrapper');
 
-    // Destroy any existing Handsontable instance if it exists
+    // Destroy any existing Handsontable instances if they exist
     if (hotInstance) {
-        hotInstance.destroy();
+      hotInstance.destroy();
+    }
+    if (blixPcbsInstance) {
+      blixPcbsInstance.destroy();
     }
 
     // Fetch data from Firestore
     let allData = [];
+    let blixData = [];
 
     try {
-        // Fetch data from 'sheetData' collection
-        const querySnapshot = await getDocs(collection(db, 'sheetData'));
-        const bloxData = {};
+      // Fetch data from 'sheetData' collection
+      const querySnapshot = await getDocs(collection(db, 'sheetData'));
+      const bloxData = {};
 
-        // Process data from 'sheetData'
-        querySnapshot.forEach((doc) => {
-            const data = doc.data().data;
-            data.forEach(row => {
-                if (row.bloxName) {
-                    const quantity = row.reminder != null ? row.reminder : row.input || 0;
-                    bloxData[row.bloxName] = (bloxData[row.bloxName] || 0) + quantity;
-                }
-            });
+      // Process data from 'sheetData'
+      querySnapshot.forEach((doc) => {
+        const data = doc.data().data;
+        data.forEach(row => {
+          if (row.bloxName) {
+            const quantity = row.reminder != null ? row.reminder : row.input || 0;
+            bloxData[row.bloxName] = (bloxData[row.bloxName] || 0) + quantity;
+          }
         });
+      });
 
-        // Convert bloxData to an array of objects
-        allData = Object.keys(bloxData).map(bloxName => ({
-            bloxName,
-            reminder: bloxData[bloxName]
-        }));
+      // Convert bloxData to an array of objects
+      allData = Object.keys(bloxData).map(bloxName => ({
+        bloxName,
+        reminder: bloxData[bloxName]
+      }));
 
-        // Filter out data where reminder is 0
-        allData = allData.filter(item => item.reminder !== 0);
+      // Filter out data where reminder is 0
+      allData = allData.filter(item => item.reminder !== 0);
 
-        // Define the preferred order of blox names
-        const preferredOrder = [
-            "Power", "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR",
-            "Motor Driver", "Wire Tap", "Button", "AI", "Wifi Clip V1", "wifi Clip V2", "Servo", "Logic Gate"
-        ];
+      // Define the preferred order of blox names
+      const preferredOrder = [
+        "Power", "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR",
+        "Motor Driver", "Wire Tap", "Button", "AI", "Wifi Clip V1", "wifi Clip V2", "Servo", "Logic Gate"
+      ];
 
-        // Sort allData to place preferred blox names first, then alphabetical
-        allData.sort((a, b) => {
-            const indexA = preferredOrder.indexOf(a.bloxName);
-            const indexB = preferredOrder.indexOf(b.bloxName);
-            if (indexA === -1 && indexB === -1) {
-                // Both are not in preferredOrder, sort alphabetically
-                return a.bloxName.localeCompare(b.bloxName);
-            } else if (indexA === -1) {
-                // Only b is in preferredOrder
-                return 1;
-            } else if (indexB === -1) {
-                // Only a is in preferredOrder
-                return -1;
-            } else {
-                // Both are in preferredOrder, compare their indices
-                return indexA - indexB;
-            }
-        });
+      // Sort allData to place preferred blox names first, then alphabetical
+      allData.sort((a, b) => {
+        const indexA = preferredOrder.indexOf(a.bloxName);
+        const indexB = preferredOrder.indexOf(b.bloxName);
+        if (indexA === -1 && indexB === -1) {
+          // Both are not in preferredOrder, sort alphabetically
+          return a.bloxName.localeCompare(b.bloxName);
+        } else if (indexA === -1) {
+          // Only b is in preferredOrder
+          return 1;
+        } else if (indexB === -1) {
+          // Only a is in preferredOrder
+          return -1;
+        } else {
+          // Both are in preferredOrder, compare their indices
+          return indexA - indexB;
+        }
+      });
 
-        // Fetch 'dipakmaindata' and subtract quantities from 'allData'
-        const mainDataSnapshot = await getDocs(collection(db, 'dipakmaindata'));
-        mainDataSnapshot.forEach((doc) => {
-            const { pcbName, quantity } = doc.data();
-            const index = allData.findIndex(item => item.bloxName === pcbName);
-            if (index !== -1) {
-                allData[index].reminder -= quantity;
-            }
-        });
+      // Separate Blix PCBs data
+      blixData = allData.filter(item => item.bloxName.startsWith('Blix'));
+      allData = allData.filter(item => !item.bloxName.startsWith('Blix'));
 
-        // Fetch 'Shirkhemaindata' and subtract quantities from 'allData'
-        const shirkheDataSnapshot = await getDocs(collection(db, 'Shirkhemaindata'));
-        shirkheDataSnapshot.forEach((doc) => {
-            const { pcbName, quantity } = doc.data();
-            const index = allData.findIndex(item => item.bloxName === pcbName);
-            if (index !== -1) {
-                allData[index].reminder -= quantity;
-            }
-        });
+      // Fetch 'dipakmaindata' and subtract quantities from 'allData'
+      const mainDataSnapshot = await getDocs(collection(db, 'dipakmaindata'));
+      mainDataSnapshot.forEach((doc) => {
+        const { pcbName, quantity } = doc.data();
+        const index = allData.findIndex(item => item.bloxName === pcbName);
+        if (index !== -1) {
+          allData[index].reminder -= quantity;
+        }
+      });
+
+      // Fetch 'Shirkhemaindata' and subtract quantities from 'allData' and 'blixData'
+      const shirkheDataSnapshot = await getDocs(collection(db, 'Shirkhemaindata'));
+      shirkheDataSnapshot.forEach((doc) => {
+        const { pcbName, quantity } = doc.data();
+        const index = allData.findIndex(item => item.bloxName === pcbName);
+        if (index !== -1) {
+          allData[index].reminder -= quantity;
+        }
+        const blixIndex = blixData.findIndex(item => item.bloxName === pcbName);
+        if (blixIndex !== -1) {
+          blixData[blixIndex].reminder -= quantity;
+        }
+      });
 
     } catch (error) {
-        console.error("Error getting documents: ", error);
+      console.error("Error getting documents: ", error);
     }
 
-    // Create a new Handsontable instance with read-only configuration
+    // Create a new Handsontable instance with read-only configuration for main data
     hotInstance = new Handsontable(container, {
-        data: allData, // Use filtered and adjusted data
-        rowHeaders: true,
-        colHeaders: ['Blox Name', 'We Have'],
-        columns: [
-            { data: 'bloxName' },
-            { data: 'reminder', type: 'numeric' }
-        ],
-        minSpareRows: 1, // Allow adding new rows
-        readOnly: true, // Make the spreadsheet view-only
-        stretchH: 'all',
-        height: 400,
-        licenseKey: 'non-commercial-and-evaluation'
+      data: allData, // Use filtered and adjusted data
+      rowHeaders: true,
+      colHeaders: ['Blox Name', 'We Have'],
+      columns: [
+        { data: 'bloxName' },
+        { data: 'reminder', type: 'numeric' }
+      ],
+      minSpareRows: 1, // Allow adding new rows
+      readOnly: true, // Make the spreadsheet view-only
+      stretchH: 'all',
+      height: 400,
+      licenseKey: 'non-commercial-and-evaluation'
     });
 
-    container.style.display = 'block'; // Display the spreadsheet container
+    // Ensure Blix data has at least one blank row if no data is present
+    if (blixData.length === 0) {
+      blixData.push({ bloxName: '', reminder: null });
+    }
+
+    // Create a new Handsontable instance with read-only configuration for Blix PCBs
+    blixPcbsInstance = new Handsontable(blixContainer, {
+      data: blixData, // Use filtered and adjusted Blix data
+      rowHeaders: true,
+      colHeaders: ['Blox Name', 'We Have'],
+      columns: [
+        { data: 'bloxName' },
+        { data: 'reminder', type: 'numeric' }
+      ],
+      minSpareRows: 1, // Allow adding new rows
+      readOnly: true, // Make the spreadsheet view-only
+      stretchH: 'all',
+      height: blixData.length > 0 ? blixData.length * 23 + 30 : 53, // Adjust height based on number of rows
+      licenseKey: 'non-commercial-and-evaluation'
+    });
+
+    container.style.display = 'block'; // Display the main spreadsheet container
+    blixContainer.style.display = 'block'; // Display the Blix PCBs spreadsheet container
 
     // Initialize other parts of your application as needed
 
@@ -559,35 +627,37 @@
     fetchMainData();
     // Call fetchShirkheData to log 'Shirkhemaindata'
     fetchShirkheData();
-}
+  }
 
-async function fetchMainData() {
+  async function fetchMainData() {
     try {
-        const querySnapshot = await getDocs(collection(db, 'dipakmaindata'));
-        querySnapshot.forEach((doc) => {
-            console.log(`${doc.id} => ${JSON.stringify(doc.data())}`);
-            // Access each document's data using doc.data()
-        });
+      const querySnapshot = await getDocs(collection(db, 'dipakmaindata'));
+      querySnapshot.forEach((doc) => {
+        console.log(`${doc.id} => ${JSON.stringify(doc.data())}`);
+        // Access each document's data using doc.data()
+      });
     } catch (error) {
-        console.error("Error fetching 'dipakmaindata': ", error);
+      console.error("Error fetching 'dipakmaindata': ", error);
     }
-}
+  }
 
-async function fetchShirkheData() {
+  async function fetchShirkheData() {
     try {
-        const querySnapshot = await getDocs(collection(db, 'Shirkhemaindata'));
-        querySnapshot.forEach((doc) => {
-            console.log(`${doc.id} => ${JSON.stringify(doc.data())}`);
-            // Access each document's data using doc.data()
-        });
+      const querySnapshot = await getDocs(collection(db, 'Shirkhemaindata'));
+      querySnapshot.forEach((doc) => {
+        console.log(`${doc.id} => ${JSON.stringify(doc.data())}`);
+        // Access each document's data using doc.data()
+      });
     } catch (error) {
-        console.error("Error fetching 'Shirkhemaindata': ", error);
+      console.error("Error fetching 'Shirkhemaindata': ", error);
     }
-}
+  }
+
+  // Call initializeSpreadsheet to start initializing the spreadsheet
+  initializeSpreadsheet();
 
 
-    // Call initializeSpreadsheet to start initializing the spreadsheet
-    initializeSpreadsheet();
+
 
     // Function to initialize Handsontable instance for no PCBs in stock
     async function initializeNoStockSpreadsheet(bloxNamesWithZeroReminder = []) {
