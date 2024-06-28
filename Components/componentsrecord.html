@@ -22,6 +22,9 @@
     </div>
     <br>
 
+    <h2>No Components In Stock</h2>
+    <div id="spreadsheetWrapperNoStock" class="spreadsheet-wrapper"></div>
+
     <!-- Container for the spreadsheet without PCBs in stock -->
     <!-- <h2>No PCB's In Stock</h2>
   <div id="spreadsheetWrapperNoStock" class="spreadsheet-wrapper"></div> -->
@@ -89,6 +92,8 @@
     <button id="saveDataBtn">Save</button>
     <button id="resetFormBtn" style="display: none;">Reset</button>
     <button id="cancelSpreadsheetBtn">Cancel</button>
+
+    <br><br>
 
 
     <a href="../index.html"><button id="homebutton">Home</button></a><br><br>
@@ -630,77 +635,81 @@
         // Call initializeSpreadsheet to start initializing the spreadsheet
         initializeSpreadsheet();
 
-        // // Function to initialize Handsontable instance for no PCBs in stock
-        // async function initializeNoStockSpreadsheet(bloxNamesWithZeroReminder = []) {
-        //   const container = document.getElementById('spreadsheetWrapperNoStock');
+        // Function to initialize Handsontable instance for components with no stock or reminders
+        async function initializeNoStockSpreadsheet(bloxNamesWithZeroReminder = []) {
+            const container = document.getElementById('spreadsheetWrapperNoStock');
 
-        //   // Fetch all blox names and their reminder values from Firestore
-        //   let allBloxData = {};
-        //   try {
-        //     const querySnapshot = await getDocs(collection(db, 'ComponentsData'));
-        //     querySnapshot.forEach((doc) => {
-        //       const data = doc.data().data;
-        //       data.forEach(row => {
-        //         if (row.bloxName) {
-        //           if (!allBloxData[row.bloxName]) {
-        //             allBloxData[row.bloxName] = 0;
-        //           }
-        //           if (row.reminder != null) {
-        //             allBloxData[row.bloxName] += row.reminder;
-        //           } else {
-        //             allBloxData[row.bloxName] += row.input;
-        //           }
-        //         }
-        //       });
-        //     });
-        //   } catch (error) {
-        //     console.error("Error getting documents: ", error);
-        //     alert("Failed to retrieve PCB records from Firestore.");
-        //     return;
-        //   }
+            // Fetch all components data from Firestore
+            let allComponentsData = {};
+            try {
+                const querySnapshot = await getDocs(collection(db, 'ComponentsData'));
+                querySnapshot.forEach(doc => {
+                    const data = doc.data().data;
+                    data.forEach(row => {
+                        if (row.componentName) {
+                            if (!allComponentsData[row.componentName]) {
+                                allComponentsData[row.componentName] = 0;
+                            }
+                            if (row.reminder != null) {
+                                allComponentsData[row.componentName] += row.reminder;
+                            } else {
+                                allComponentsData[row.componentName] += row.input;
+                            }
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error("Error getting documents: ", error);
+                alert("Failed to retrieve component records from Firestore.");
+                return;
+            }
 
-        //   // Define the list of blox names you want to check
-        //   const bloxNamesToCheck = [
-        //     'Power', 'Lamp', 'Buzzer', 'Invert', 'Dark', 'Distance', 'IR', 'Motor Driver',
-        //     'Wire Tap', 'Button', 'AI', 'Wifi Clip V1', 'wifi Clip V2', 'Servo', 'Logic Gate',
-        //     'Toggle', 'Touch', 'Laser', 'Solar', 'Heat', 'New TX-RX', 'Old TX-RX', 'Magnet',
-        //     'Record And Repete', 'AI Chat', 'Clap', 'Tongee'
-        //   ];
+            // List of component names to check
+            const componentNamesToCheck = [
+                '1K ( 102 )', '10K ( 103 )', '100K ( 104 )', '1M ( 105 )', '2K2 ( 222 )', '150R ( 151 )', '150R Big ( 151 )',
+                '680R ( 681 )', '33K ( 333 )', '47R ( 470 )', '470R ( 471 )', '330R ( 331 )', '2M2 ( 225 )', '33R ( 330 )',
+                '1nf ( 102 )', '10nf ( 103 )', '100nf ( 104 )', '680nf ( 684 )', 'Red Led', 'Green Led', 'Lamp Led',
+                'PMBT2222A ( 1P )', 'PMMBT2907A ( 2P )', 'SS14', 'SS24', 'LM311DR (5V) or AMS117 5V', 'AMS117 3.3V',
+                '4050BT IC', 'Fuse'
+            ];
 
-        //   // Include blox names with zero reminders in the list to check
-        //   bloxNamesWithZeroReminder.forEach(bloxName => {
-        //     if (!bloxNamesToCheck.includes(bloxName)) {
-        //       bloxNamesToCheck.push(bloxName);
-        //     }
-        //   });
+            // Include component names with zero reminders in the list to check
+            bloxNamesWithZeroReminder.forEach(componentName => {
+                if (!componentNamesToCheck.includes(componentName)) {
+                    componentNamesToCheck.push(componentName);
+                }
+            });
 
-        //   // Filter out blox names that are not in PCB records or have a reminder of 0
-        //   const bloxNamesNotInRecords = bloxNamesToCheck.filter(bloxName => !allBloxData[bloxName] || allBloxData[bloxName] === 0);
+            // Filter out component names that are not in records or have a reminder of 0
+            const componentNamesNotInRecords = componentNamesToCheck.filter(componentName => !allComponentsData[componentName] || allComponentsData[componentName] === 0);
 
-        //   // Create the data array for Handsontable with blox names not in records or with a reminder of 0
-        //   const data = bloxNamesNotInRecords.map(bloxName => ({
-        //     bloxName: bloxName,
-        //     reminder: 0 // Set reminder to 0 for blox names not in records or with a reminder of 0
-        //   }));
+            // Create data array for Handsontable with component names not in records or with a reminder of 0
+            const data = componentNamesNotInRecords.map(componentName => ({
+                componentName: componentName,
+                reminder: 0 // Set reminder to 0 for component names not in records or with a reminder of 0
+            }));
 
-        //   // Create a new Handsontable instance with read-only configuration
-        //   const hotInstance = new Handsontable(container, {
-        //     data: data,
-        //     rowHeaders: true,
-        //     colHeaders: ['Blox Name', 'We Have'],
-        //     columns: [
-        //       { data: 'componentName' },
-        //       { data: 'reminder', type: 'numeric' }
-        //     ],
-        //     minSpareRows: 1, // Allow adding new rows
-        //     readOnly: true, // Make the spreadsheet view-only
-        //     stretchH: 'all',
-        //     height: 200,
-        //     licenseKey: 'non-commercial-and-evaluation'
-        //   });
+            // Create a new Handsontable instance with read-only configuration
+            const hotInstance = new Handsontable(container, {
+                data: data,
+                rowHeaders: true,
+                colHeaders: ['Component Name', 'Reminder'],
+                columns: [
+                    { data: 'componentName' },
+                    { data: 'reminder', type: 'numeric' }
+                ],
+                minSpareRows: 1, // Allow adding new rows
+                readOnly: true, // Make the spreadsheet view-only
+                stretchH: 'all',
+                height: 200,
+                licenseKey: 'non-commercial-and-evaluation'
+            });
 
-        //   container.style.display = 'block'; // Display the spreadsheet container
-        // }
+            container.style.display = 'block'; // Display the spreadsheet container
+        }
+
+        // Example of calling initializeNoStockSpreadsheet function
+        initializeNoStockSpreadsheet();
 
         // Event listener for when the DOM is fully loaded
         document.addEventListener('DOMContentLoaded', function () {
