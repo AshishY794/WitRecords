@@ -286,31 +286,37 @@
     }
 
 
-
-    // Function to save data to Firestore
-    async function saveData() {
-      try {
-        if (!selectedDate) {
-          alert("Please select a date.");
-          return;
-        }
-
-        const data = hot.getData(); // Get all data from Handsontable instance
-        const flattenedData = flattenData(data); // Flatten the nested array data
-        const notes = document.getElementById('notes').value; // Get notes
-
-        const docRef = doc(db, `sheetData/${selectedDate}/`); // Reference to Firestore document
-
-        // Save data and notes to Firestore document
-        await setDoc(docRef, { data: flattenedData, notes: notes });
-
-        alert("Data and notes saved to Firestore under " + selectedDate); // Show a message to the user
-        resetForm(); // Reset the form after saving
-      } catch (error) {
-        console.error("Error adding document: ", error);
-        alert("Failed to save data to Firestore. Please try again.");
-      }
+// Function to save data to Firestore
+async function saveData() {
+  try {
+    if (!selectedDate) {
+      alert("Please select a date.");
+      return;
     }
+
+    // Check if the date already exists in the database
+    const docRef = doc(db, `sheetData/${selectedDate}`);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      alert("The selected date already exists in the database. Please choose a different date.");
+      return;
+    }
+
+    const data = hot.getData(); // Get all data from Handsontable instance
+    const flattenedData = flattenData(data); // Flatten the nested array data
+    const notes = document.getElementById('notes').value; // Get notes
+
+    // Save data and notes to Firestore document
+    await setDoc(docRef, { data: flattenedData, notes: notes });
+
+    alert("Data and notes saved to Firestore under " + selectedDate); // Show a message to the user
+    resetForm(); // Reset the form after saving
+  } catch (error) {
+    console.error("Error adding document: ", error);
+    alert("Failed to save data to Firestore. Please try again.");
+  }
+}
 
     // Event listener for Add Data button click
     document.getElementById('openSpreadsheetBtn').onclick = function () {
@@ -481,180 +487,180 @@
 
 
     let hotInstance; // Handsontable instance for main data
-  let blixPcbsInstance; // Handsontable instance for Blix PCBs
+    let blixPcbsInstance; // Handsontable instance for Blix PCBs
 
-  async function initializeSpreadsheet() {
-    const container = document.getElementById('spreadsheetWrapper');
-    const blixContainer = document.getElementById('blixPcbsWrapper');
+    async function initializeSpreadsheet() {
+      const container = document.getElementById('spreadsheetWrapper');
+      const blixContainer = document.getElementById('blixPcbsWrapper');
 
-    // Destroy any existing Handsontable instances if they exist
-    if (hotInstance) {
-      hotInstance.destroy();
-    }
-    if (blixPcbsInstance) {
-      blixPcbsInstance.destroy();
-    }
+      // Destroy any existing Handsontable instances if they exist
+      if (hotInstance) {
+        hotInstance.destroy();
+      }
+      if (blixPcbsInstance) {
+        blixPcbsInstance.destroy();
+      }
 
-    // Fetch data from Firestore
-    let allData = [];
-    let blixData = [];
+      // Fetch data from Firestore
+      let allData = [];
+      let blixData = [];
 
-    try {
-      // Fetch data from 'sheetData' collection
-      const querySnapshot = await getDocs(collection(db, 'sheetData'));
-      const bloxData = {};
+      try {
+        // Fetch data from 'sheetData' collection
+        const querySnapshot = await getDocs(collection(db, 'sheetData'));
+        const bloxData = {};
 
-      // Process data from 'sheetData'
-      querySnapshot.forEach((doc) => {
-        const data = doc.data().data;
-        data.forEach(row => {
-          if (row.bloxName) {
-            const quantity = row.reminder != null ? row.reminder : row.input || 0;
-            bloxData[row.bloxName] = (bloxData[row.bloxName] || 0) + quantity;
+        // Process data from 'sheetData'
+        querySnapshot.forEach((doc) => {
+          const data = doc.data().data;
+          data.forEach(row => {
+            if (row.bloxName) {
+              const quantity = row.reminder != null ? row.reminder : row.input || 0;
+              bloxData[row.bloxName] = (bloxData[row.bloxName] || 0) + quantity;
+            }
+          });
+        });
+
+        // Convert bloxData to an array of objects
+        allData = Object.keys(bloxData).map(bloxName => ({
+          bloxName,
+          reminder: bloxData[bloxName]
+        }));
+
+        // Filter out data where reminder is 0
+        allData = allData.filter(item => item.reminder !== 0);
+
+        // Define the preferred order of blox names
+        const preferredOrder = [
+          "Power", "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR",
+          "Motor Driver", "Wire Tap", "Button", "AI", "Wifi Clip V1", "wifi Clip V2", "Servo", "Logic Gate"
+        ];
+
+        // Sort allData to place preferred blox names first, then alphabetical
+        allData.sort((a, b) => {
+          const indexA = preferredOrder.indexOf(a.bloxName);
+          const indexB = preferredOrder.indexOf(b.bloxName);
+          if (indexA === -1 && indexB === -1) {
+            // Both are not in preferredOrder, sort alphabetically
+            return a.bloxName.localeCompare(b.bloxName);
+          } else if (indexA === -1) {
+            // Only b is in preferredOrder
+            return 1;
+          } else if (indexB === -1) {
+            // Only a is in preferredOrder
+            return -1;
+          } else {
+            // Both are in preferredOrder, compare their indices
+            return indexA - indexB;
           }
         });
+
+        // Separate Blix PCBs data
+        blixData = allData.filter(item => item.bloxName.startsWith('Blix'));
+        allData = allData.filter(item => !item.bloxName.startsWith('Blix'));
+
+        // Fetch 'dipakmaindata' and subtract quantities from 'allData'
+        const mainDataSnapshot = await getDocs(collection(db, 'dipakmaindata'));
+        mainDataSnapshot.forEach((doc) => {
+          const { pcbName, quantity } = doc.data();
+          const index = allData.findIndex(item => item.bloxName === pcbName);
+          if (index !== -1) {
+            allData[index].reminder -= quantity;
+          }
+        });
+
+        // Fetch 'Shirkhemaindata' and subtract quantities from 'allData' and 'blixData'
+        const shirkheDataSnapshot = await getDocs(collection(db, 'Shirkhemaindata'));
+        shirkheDataSnapshot.forEach((doc) => {
+          const { pcbName, quantity } = doc.data();
+          const index = allData.findIndex(item => item.bloxName === pcbName);
+          if (index !== -1) {
+            allData[index].reminder -= quantity;
+          }
+          const blixIndex = blixData.findIndex(item => item.bloxName === pcbName);
+          if (blixIndex !== -1) {
+            blixData[blixIndex].reminder -= quantity;
+          }
+        });
+
+      } catch (error) {
+        console.error("Error getting documents: ", error);
+      }
+
+      // Create a new Handsontable instance with read-only configuration for main data
+      hotInstance = new Handsontable(container, {
+        data: allData, // Use filtered and adjusted data
+        rowHeaders: true,
+        colHeaders: ['Blox Name', 'We Have'],
+        columns: [
+          { data: 'bloxName' },
+          { data: 'reminder', type: 'numeric' }
+        ],
+        minSpareRows: 1, // Allow adding new rows
+        readOnly: true, // Make the spreadsheet view-only
+        stretchH: 'all',
+        height: 400,
+        licenseKey: 'non-commercial-and-evaluation'
       });
 
-      // Convert bloxData to an array of objects
-      allData = Object.keys(bloxData).map(bloxName => ({
-        bloxName,
-        reminder: bloxData[bloxName]
-      }));
+      // Ensure Blix data has at least one blank row if no data is present
+      if (blixData.length === 0) {
+        blixData.push({ bloxName: '', reminder: null });
+      }
 
-      // Filter out data where reminder is 0
-      allData = allData.filter(item => item.reminder !== 0);
-
-      // Define the preferred order of blox names
-      const preferredOrder = [
-        "Power", "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR",
-        "Motor Driver", "Wire Tap", "Button", "AI", "Wifi Clip V1", "wifi Clip V2", "Servo", "Logic Gate"
-      ];
-
-      // Sort allData to place preferred blox names first, then alphabetical
-      allData.sort((a, b) => {
-        const indexA = preferredOrder.indexOf(a.bloxName);
-        const indexB = preferredOrder.indexOf(b.bloxName);
-        if (indexA === -1 && indexB === -1) {
-          // Both are not in preferredOrder, sort alphabetically
-          return a.bloxName.localeCompare(b.bloxName);
-        } else if (indexA === -1) {
-          // Only b is in preferredOrder
-          return 1;
-        } else if (indexB === -1) {
-          // Only a is in preferredOrder
-          return -1;
-        } else {
-          // Both are in preferredOrder, compare their indices
-          return indexA - indexB;
-        }
+      // Create a new Handsontable instance with read-only configuration for Blix PCBs
+      blixPcbsInstance = new Handsontable(blixContainer, {
+        data: blixData, // Use filtered and adjusted Blix data
+        rowHeaders: true,
+        colHeaders: ['Blox Name', 'We Have'],
+        columns: [
+          { data: 'bloxName' },
+          { data: 'reminder', type: 'numeric' }
+        ],
+        minSpareRows: 1, // Allow adding new rows
+        readOnly: true, // Make the spreadsheet view-only
+        stretchH: 'all',
+        height: blixData.length > 0 ? blixData.length * 23 + 30 : 53, // Adjust height based on number of rows
+        licenseKey: 'non-commercial-and-evaluation'
       });
 
-      // Separate Blix PCBs data
-      blixData = allData.filter(item => item.bloxName.startsWith('Blix'));
-      allData = allData.filter(item => !item.bloxName.startsWith('Blix'));
+      container.style.display = 'block'; // Display the main spreadsheet container
+      blixContainer.style.display = 'block'; // Display the Blix PCBs spreadsheet container
 
-      // Fetch 'dipakmaindata' and subtract quantities from 'allData'
-      const mainDataSnapshot = await getDocs(collection(db, 'dipakmaindata'));
-      mainDataSnapshot.forEach((doc) => {
-        const { pcbName, quantity } = doc.data();
-        const index = allData.findIndex(item => item.bloxName === pcbName);
-        if (index !== -1) {
-          allData[index].reminder -= quantity;
-        }
-      });
+      // Initialize other parts of your application as needed
 
-      // Fetch 'Shirkhemaindata' and subtract quantities from 'allData' and 'blixData'
-      const shirkheDataSnapshot = await getDocs(collection(db, 'Shirkhemaindata'));
-      shirkheDataSnapshot.forEach((doc) => {
-        const { pcbName, quantity } = doc.data();
-        const index = allData.findIndex(item => item.bloxName === pcbName);
-        if (index !== -1) {
-          allData[index].reminder -= quantity;
-        }
-        const blixIndex = blixData.findIndex(item => item.bloxName === pcbName);
-        if (blixIndex !== -1) {
-          blixData[blixIndex].reminder -= quantity;
-        }
-      });
-
-    } catch (error) {
-      console.error("Error getting documents: ", error);
+      // Call fetchMainData to log 'dipakmaindata'
+      fetchMainData();
+      // Call fetchShirkheData to log 'Shirkhemaindata'
+      fetchShirkheData();
     }
 
-    // Create a new Handsontable instance with read-only configuration for main data
-    hotInstance = new Handsontable(container, {
-      data: allData, // Use filtered and adjusted data
-      rowHeaders: true,
-      colHeaders: ['Blox Name', 'We Have'],
-      columns: [
-        { data: 'bloxName' },
-        { data: 'reminder', type: 'numeric' }
-      ],
-      minSpareRows: 1, // Allow adding new rows
-      readOnly: true, // Make the spreadsheet view-only
-      stretchH: 'all',
-      height: 400,
-      licenseKey: 'non-commercial-and-evaluation'
-    });
-
-    // Ensure Blix data has at least one blank row if no data is present
-    if (blixData.length === 0) {
-      blixData.push({ bloxName: '', reminder: null });
+    async function fetchMainData() {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'dipakmaindata'));
+        querySnapshot.forEach((doc) => {
+          console.log(`${doc.id} => ${JSON.stringify(doc.data())}`);
+          // Access each document's data using doc.data()
+        });
+      } catch (error) {
+        console.error("Error fetching 'dipakmaindata': ", error);
+      }
     }
 
-    // Create a new Handsontable instance with read-only configuration for Blix PCBs
-    blixPcbsInstance = new Handsontable(blixContainer, {
-      data: blixData, // Use filtered and adjusted Blix data
-      rowHeaders: true,
-      colHeaders: ['Blox Name', 'We Have'],
-      columns: [
-        { data: 'bloxName' },
-        { data: 'reminder', type: 'numeric' }
-      ],
-      minSpareRows: 1, // Allow adding new rows
-      readOnly: true, // Make the spreadsheet view-only
-      stretchH: 'all',
-      height: blixData.length > 0 ? blixData.length * 23 + 30 : 53, // Adjust height based on number of rows
-      licenseKey: 'non-commercial-and-evaluation'
-    });
-
-    container.style.display = 'block'; // Display the main spreadsheet container
-    blixContainer.style.display = 'block'; // Display the Blix PCBs spreadsheet container
-
-    // Initialize other parts of your application as needed
-
-    // Call fetchMainData to log 'dipakmaindata'
-    fetchMainData();
-    // Call fetchShirkheData to log 'Shirkhemaindata'
-    fetchShirkheData();
-  }
-
-  async function fetchMainData() {
-    try {
-      const querySnapshot = await getDocs(collection(db, 'dipakmaindata'));
-      querySnapshot.forEach((doc) => {
-        console.log(`${doc.id} => ${JSON.stringify(doc.data())}`);
-        // Access each document's data using doc.data()
-      });
-    } catch (error) {
-      console.error("Error fetching 'dipakmaindata': ", error);
+    async function fetchShirkheData() {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'Shirkhemaindata'));
+        querySnapshot.forEach((doc) => {
+          console.log(`${doc.id} => ${JSON.stringify(doc.data())}`);
+          // Access each document's data using doc.data()
+        });
+      } catch (error) {
+        console.error("Error fetching 'Shirkhemaindata': ", error);
+      }
     }
-  }
 
-  async function fetchShirkheData() {
-    try {
-      const querySnapshot = await getDocs(collection(db, 'Shirkhemaindata'));
-      querySnapshot.forEach((doc) => {
-        console.log(`${doc.id} => ${JSON.stringify(doc.data())}`);
-        // Access each document's data using doc.data()
-      });
-    } catch (error) {
-      console.error("Error fetching 'Shirkhemaindata': ", error);
-    }
-  }
-
-  // Call initializeSpreadsheet to start initializing the spreadsheet
-  initializeSpreadsheet();
+    // Call initializeSpreadsheet to start initializing the spreadsheet
+    initializeSpreadsheet();
 
 
 

@@ -117,6 +117,120 @@
         #pcbSelect2 option {
             font-size: 14px;
         }
+
+
+        /* Styles for the Add Multiple PCBs section */
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+            color: #333;
+        }
+
+        #multiPcbTable {
+            width: 100%;
+            max-width: 800px;
+            /* Adjust max-width as needed */
+            margin: 0 auto;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        #multiPcbTable th,
+        #multiPcbTable td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+
+        #multiPcbTable th {
+            background-color: #f8f8f8;
+        }
+
+        #multiPcbTable td {
+            background-color: #fff;
+        }
+
+        .pcbSelectMulti {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            /* Ensure padding doesn't affect width */
+            font-size: 14px;
+            /* Adjust font size as needed */
+        }
+
+        .pcbQuantity {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            /* Ensure padding doesn't affect width */
+            font-size: 14px;
+            /* Adjust font size as needed */
+        }
+
+        .removeRowBtn {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 14px;
+            /* Adjust font size as needed */
+        }
+
+        .removeRowBtn:hover {
+            background-color: #ff1a1a;
+        }
+
+        #addRowBtn,
+        #saveMultiBtn {
+            display: block;
+            width: calc(50% - 20px);
+            /* Ensure buttons are full width on smaller screens */
+            margin: 20px auto;
+            padding: 12px;
+            color: white;
+            background-color: #4CAF50;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        #addRowBtn:hover,
+        #saveMultiBtn:hover {
+            background-color: #45a049;
+        }
+
+        #saveMultiBtn {
+            background-color: #2196F3;
+        }
+
+        #saveMultiBtn:hover {
+            background-color: #0b7dda;
+        }
+
+        @media only screen and (max-width: 600px) {
+
+            /* Adjustments for smaller screens */
+            .pcbSelectMulti,
+            .pcbQuantity {
+                font-size: 12px;
+            }
+
+            .removeRowBtn {
+                font-size: 12px;
+                padding: 6px 10px;
+            }
+
+            #addRowBtn,
+            #saveMultiBtn {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 
@@ -130,13 +244,13 @@
         </div>
 
         <div id="loading">Loading data, please wait...</div>
-    
+
         <h1>Dipak Sir Given PCBs</h1>
 
         <div id="spreadsheetWrapperView"></div>
         <br><br>
 
-       
+
 
         <label for="pcbSelect">Select PCB (Send PCB To Dipak Sir): </label>
         <select id="pcbSelect">
@@ -159,6 +273,32 @@
         <button id="saveBtn2" style="display: none;">Save</button>
         <button id="cancelBtn2" style="display: none;">Cancel</button> <!-- Cancel button for second dropdown -->
         <br><br>
+
+        <h1>Add Multiple PCBs</h1>
+        <table id="multiPcbTable">
+            <thead>
+                <tr>
+                    <th>Select PCB</th>
+                    <th>Quantity</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="multiPcbTableBody">
+                <tr>
+                    <td>
+                        <select class="pcbSelectMulti">
+                            <option value="">Select PCB</option>
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                    </td>
+                    <td><input type="number" class="pcbQuantity" min="1"></td>
+                    <td><button class="removeRowBtn">Remove</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <button id="addRowBtn">Add Another PCB</button>
+        <button id="saveMultiBtn">Save All</button>
+
         <center> <a href="../index.html"><Button>Home</Button></a></center>
 
 
@@ -181,12 +321,37 @@
         };
 
         // Array of PCB names
+
         const pcbNames = [
             "Power", "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR", "Motor Driver", "Wire Tap", "Button",
             "AI", "Wifi Clip V1", "Wifi Clip V2", "Servo", "Logic Gate", "Toggle", "Touch", "Laser", "Solar", "Heat",
             "New TX-RX", "Old TX-RX", "Magnet", "Record And Repeat", "AI Chat", "Clap", "Tongee", 'Blix Power', 'Blix Led', 'Blix Buzzer', 'Blix Not', 'Blix Motor Driver', 'Blix Distance', 'Blix IR', 'Blix Switch'
         ];
 
+
+            // Function to reset the form
+            function resetForm() {
+            const tableBody = document.getElementById('multiPcbTableBody');
+            tableBody.innerHTML = `
+        <tr>
+            <td>
+                <select class="pcbSelectMulti">
+                    <option value="">Select PCB</option>
+                    <!-- Options will be populated dynamically -->
+                </select>
+            </td>
+            <td><input type="number" class="pcbQuantity" min="1"></td>
+            <td><button class="removeRowBtn">Remove</button></td>
+        </tr>
+    `;
+
+            // Clear selected options in the dynamically populated selects
+            const selects = document.querySelectorAll('.pcbSelectMulti');
+            selects.forEach(select => {
+                select.value = '';
+            });
+        }
+        
         // Function to populate the first PCB select dropdown
         function populatePCBSelect() {
             const select = document.getElementById('pcbSelect');
@@ -202,6 +367,103 @@
                 select.appendChild(option);
             });
         }
+
+        function populatePCBSelect1(selectElement) {
+            selectElement.innerHTML = '<option value="">Select PCB</option>';
+
+            pcbNames.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                selectElement.appendChild(option);
+            });
+        }
+        function initializeMultiPcbTable() {
+            const tableBody = document.getElementById('multiPcbTableBody');
+            const firstSelect = tableBody.querySelector('.pcbSelectMulti');
+            populatePCBSelect1(firstSelect);
+        }
+        initializeMultiPcbTable();
+
+        // Event listener for adding a new row
+        document.getElementById('addRowBtn').addEventListener('click', () => {
+            const tableBody = document.getElementById('multiPcbTableBody');
+            const newRow = document.createElement('tr');
+
+            newRow.innerHTML = `
+        <td>
+            <select class="pcbSelectMulti">
+                <option value="">Select PCB</option>
+                <!-- Options will be populated dynamically -->
+            </select>
+        </td>
+        <td><input type="number" class="pcbQuantity" min="1"></td>
+        <td><button class="removeRowBtn">Remove</button></td>
+    `;
+
+            tableBody.appendChild(newRow);
+
+            const newSelect = newRow.querySelector('.pcbSelectMulti');
+            populatePCBSelect1(newSelect);
+
+            newRow.querySelector('.removeRowBtn').addEventListener('click', () => {
+                newRow.remove();
+            });
+        });
+
+       // / Event listener for saving multiple PCBs
+       document.getElementById('saveMultiBtn').addEventListener('click', async () => {
+            const rows = document.querySelectorAll('#multiPcbTableBody tr');
+            const batch = writeBatch(db);
+            const promises = [];
+
+            rows.forEach((row, rowIndex) => {
+                const select = row.querySelector('.pcbSelectMulti');
+                const quantityInput = row.querySelector('.pcbQuantity');
+                const selectedPCB = select.value;
+                const quantity = parseInt(quantityInput.value, 10);
+
+                if (selectedPCB && !isNaN(quantity) && quantity > 0) {
+                    // Fetch current quantity from 'dipakmaindata' if it exists
+                    promises.push((async () => {
+                        let currentQuantity = 0;
+                        const mainDataDocRef = doc(collection(db, 'dipakmaindata'), selectedPCB);
+                        const mainDataDocSnap = await getDoc(mainDataDocRef);
+                        if (mainDataDocSnap.exists()) {
+                            const mainData = mainDataDocSnap.data();
+                            currentQuantity = mainData.quantity || 0;
+                        }
+
+                        const date = new Date().toISOString().split('T')[0]; // Current date
+
+                        // Update 'dipaksirrecord' collection under selectedPCB/data
+                        const docRef = doc(collection(db, 'dipaksirrecord', selectedPCB, 'data'), `entry${rowIndex + 1}`);
+                        batch.set(docRef, { date, quantity });
+
+                        // Calculate new total quantity for 'dipakmaindata'
+                        const totalQuantity = currentQuantity + quantity;
+
+                        // Update 'dipakmaindata' collection under selectedPCB with new total quantity
+                        batch.set(mainDataDocRef, { pcbName: selectedPCB, quantity: totalQuantity });
+                    })());
+                } else {
+                    alert(`Invalid PCB or quantity in row ${rowIndex + 1}.`);
+                }
+            });
+
+            try {
+                await Promise.all(promises);
+                await batch.commit();
+                alert('Data saved successfully.');
+
+                // Reset form and clear table rows after successful save
+                resetForm();
+            } catch (error) {
+                console.error('Error saving data: ', error);
+                alert('Error saving data. Please try again.');
+            }
+        }); // Function to populate the first PCB select dropdown
+
 
         // Function to populate the second PCB select dropdown
         function populatePCBSelect2() {
@@ -427,6 +689,7 @@
 
 
 
+
         document.getElementById('saveBtn').addEventListener('click', async () => {
             if (!hotInstance) return;
 
@@ -489,155 +752,155 @@
 
         let hotInstanceView;
 
-async function fetchPCBDataFromDipakSirGiven(pcbName, batchSize = 10) {
-    let lastVisible = null;
-    let fetchedData = [];
+        async function fetchPCBDataFromDipakSirGiven(pcbName, batchSize = 10) {
+            let lastVisible = null;
+            let fetchedData = [];
 
-    while (true) {
-        const q = query(
-            collection(db, 'dipaksirgivendata2', pcbName, 'Data'),
-            orderBy('date'),
-            startAfter(lastVisible || 0),
-            limit(batchSize)
-        );
+            while (true) {
+                const q = query(
+                    collection(db, 'dipaksirgivendata2', pcbName, 'Data'),
+                    orderBy('date'),
+                    startAfter(lastVisible || 0),
+                    limit(batchSize)
+                );
 
-        const querySnapshot = await getDocs(q);
-        if (querySnapshot.empty) break;
+                const querySnapshot = await getDocs(q);
+                if (querySnapshot.empty) break;
 
-        querySnapshot.forEach((doc) => {
-            fetchedData.push(doc.data());
-        });
+                querySnapshot.forEach((doc) => {
+                    fetchedData.push(doc.data());
+                });
 
-        lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
-    }
+                lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
+            }
 
-    return fetchedData;
-}
-
-async function retrieveAndDisplayDipakSirGivenData() {
-    const container = document.getElementById('spreadsheetWrapperView');
-
-    if (!container) {
-        console.error('Container element not found.');
-        return;
-    }
-
-    // Clear any existing Handsontable instance
-    if (hotInstanceView) {
-        hotInstanceView.destroy();
-    }
-
-    // Show loading message
-    container.innerHTML = ' <center><p>Loading data...</p></center>';
-
-    // Fetch all data from Firestore for dipaksirgivendata2
-    let pcbDataMap = {};
-    try {
-        // Fetch data in parallel for better performance
-        const fetchDataPromises = pcbNames.map(async (pcbName) => {
-            const data = await fetchPCBDataFromDipakSirGiven(pcbName);
-            data.forEach(entry => {
-                if (!pcbDataMap[pcbName]) {
-                    pcbDataMap[pcbName] = {
-                        quantity: 0
-                    };
-                }
-                pcbDataMap[pcbName].quantity += entry.quantity;
-            });
-        });
-
-        await Promise.all(fetchDataPromises);
-
-        console.log('Retrieved Data:', pcbDataMap); // Log the retrieved data
-    } catch (error) {
-        console.error('Error retrieving data:', error);
-        container.innerHTML = '<p>Error loading data. Please try again later.</p>';
-        return;
-    }
-
-    // Convert the pcbDataMap to an array for Handsontable
-    let allData = Object.keys(pcbDataMap).map(pcbName => {
-        return [pcbName, pcbDataMap[pcbName].quantity];
-    });
-
-    // Add an empty row to ensure there is always one blank row at the end
-    allData.push(['', '']);
-
-    // Clear loading message
-    container.innerHTML = '';
-
-    // Calculate the height to fit the data
-    const rowHeight = 23; // Default row height in Handsontable
-    const headerHeight = 25; // Estimated height of the table header
-    const dataHeight = allData.length * rowHeight;
-    const calculatedHeight = dataHeight + headerHeight + 2; // Adding a small buffer
-
-    // Create a new Handsontable instance to display all retrieved data
-    hotInstanceView = new Handsontable(container, {
-        data: allData,
-        rowHeaders: true,
-        colHeaders: ['PCB', 'Quantity'],
-        columns: [
-            { data: 0, readOnly: true }, // PCB column
-            { data: 1, type: 'numeric' } // Quantity column
-        ],
-        minSpareRows: 1,
-        stretchH: 'all',
-        height: calculatedHeight,
-        licenseKey: 'non-commercial-and-evaluation'
-    });
-
-    container.style.display = 'block'; // Display the spreadsheet container
-}
-
-retrieveAndDisplayDipakSirGivenData();
-
-
-
-
-
-document.getElementById('saveBtn2').addEventListener('click', async () => {
-    if (!hotInstance2) return;
-
-    const selectedPCB = document.getElementById('pcbSelect2').value;
-    if (!selectedPCB) {
-        console.error('No PCB selected.');
-        return;
-    }
-
-    const updatedData = hotInstance2.getData().slice(0, -1); // Exclude the last empty row
-    const batch = writeBatch(db);
-
-    updatedData.forEach((row, index) => {
-        const date = row[0];
-        const quantity = parseInt(row[1], 10); // Ensure quantity is an integer
-
-        if (isNaN(quantity)) {
-            alert(`Invalid quantity value at row ${index + 1}: ${row[1]}`);
-            return; // Skip saving this row if quantity is invalid
+            return fetchedData;
         }
 
-        // Define the first document reference path
-        const docRef1 = doc(collection(db, 'dipaksirrecordgiven', selectedPCB, 'data'), `entry${index + 1}`);
-        batch.set(docRef1, { date, quantity });
+        async function retrieveAndDisplayDipakSirGivenData() {
+            const container = document.getElementById('spreadsheetWrapperView');
 
-        // Define the second document reference path
-        const newDocRef2 = doc(db, 'dipaksirgivendata2', selectedPCB, 'Data', `entry${index + 1}`);
-        batch.set(newDocRef2, { date, quantity });
-    });
+            if (!container) {
+                console.error('Container element not found.');
+                return;
+            }
 
-    try {
-        await batch.commit();
-        alert('Data saved successfully.');
+            // Clear any existing Handsontable instance
+            if (hotInstanceView) {
+                hotInstanceView.destroy();
+            }
 
-        // Hide Handsontable and clear data
-        hideHandsontable('spreadsheetWrapperEdit2', 'saveBtn2');
+            // Show loading message
+            container.innerHTML = ' <center><p>Loading data...</p></center>';
 
-    } catch (error) {
-        console.error('Error saving data: ', error);
-        alert('Error saving data. Please try again.');
-    }
-});
+            // Fetch all data from Firestore for dipaksirgivendata2
+            let pcbDataMap = {};
+            try {
+                // Fetch data in parallel for better performance
+                const fetchDataPromises = pcbNames.map(async (pcbName) => {
+                    const data = await fetchPCBDataFromDipakSirGiven(pcbName);
+                    data.forEach(entry => {
+                        if (!pcbDataMap[pcbName]) {
+                            pcbDataMap[pcbName] = {
+                                quantity: 0
+                            };
+                        }
+                        pcbDataMap[pcbName].quantity += entry.quantity;
+                    });
+                });
+
+                await Promise.all(fetchDataPromises);
+
+                console.log('Retrieved Data:', pcbDataMap); // Log the retrieved data
+            } catch (error) {
+                console.error('Error retrieving data:', error);
+                container.innerHTML = '<p>Error loading data. Please try again later.</p>';
+                return;
+            }
+
+            // Convert the pcbDataMap to an array for Handsontable
+            let allData = Object.keys(pcbDataMap).map(pcbName => {
+                return [pcbName, pcbDataMap[pcbName].quantity];
+            });
+
+            // Add an empty row to ensure there is always one blank row at the end
+            allData.push(['', '']);
+
+            // Clear loading message
+            container.innerHTML = '';
+
+            // Calculate the height to fit the data
+            const rowHeight = 23; // Default row height in Handsontable
+            const headerHeight = 25; // Estimated height of the table header
+            const dataHeight = allData.length * rowHeight;
+            const calculatedHeight = dataHeight + headerHeight + 2; // Adding a small buffer
+
+            // Create a new Handsontable instance to display all retrieved data
+            hotInstanceView = new Handsontable(container, {
+                data: allData,
+                rowHeaders: true,
+                colHeaders: ['PCB', 'Quantity'],
+                columns: [
+                    { data: 0, readOnly: true }, // PCB column
+                    { data: 1, type: 'numeric' } // Quantity column
+                ],
+                minSpareRows: 1,
+                stretchH: 'all',
+                height: calculatedHeight,
+                licenseKey: 'non-commercial-and-evaluation'
+            });
+
+            container.style.display = 'block'; // Display the spreadsheet container
+        }
+
+        retrieveAndDisplayDipakSirGivenData();
+
+
+
+
+
+        document.getElementById('saveBtn2').addEventListener('click', async () => {
+            if (!hotInstance2) return;
+
+            const selectedPCB = document.getElementById('pcbSelect2').value;
+            if (!selectedPCB) {
+                console.error('No PCB selected.');
+                return;
+            }
+
+            const updatedData = hotInstance2.getData().slice(0, -1); // Exclude the last empty row
+            const batch = writeBatch(db);
+
+            updatedData.forEach((row, index) => {
+                const date = row[0];
+                const quantity = parseInt(row[1], 10); // Ensure quantity is an integer
+
+                if (isNaN(quantity)) {
+                    alert(`Invalid quantity value at row ${index + 1}: ${row[1]}`);
+                    return; // Skip saving this row if quantity is invalid
+                }
+
+                // Define the first document reference path
+                const docRef1 = doc(collection(db, 'dipaksirrecordgiven', selectedPCB, 'data'), `entry${index + 1}`);
+                batch.set(docRef1, { date, quantity });
+
+                // Define the second document reference path
+                const newDocRef2 = doc(db, 'dipaksirgivendata2', selectedPCB, 'Data', `entry${index + 1}`);
+                batch.set(newDocRef2, { date, quantity });
+            });
+
+            try {
+                await batch.commit();
+                alert('Data saved successfully.');
+
+                // Hide Handsontable and clear data
+                hideHandsontable('spreadsheetWrapperEdit2', 'saveBtn2');
+
+            } catch (error) {
+                console.error('Error saving data: ', error);
+                alert('Error saving data. Please try again.');
+            }
+        });
 
 
         function hideHandsontable(wrapperId, saveBtnId) {
