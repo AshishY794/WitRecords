@@ -323,7 +323,6 @@
             "New TX-RX", "Old TX-RX", "Magnet", "Record And Repeat", "AI Chat", "Clap", "Tongee", 'Blix Power', 'Blix Led', 'Blix Buzzer', 'Blix Not', 'Blix Motor Driver', 'Blix Distance', 'Blix IR', 'Blix Switch'
         ];
 
-
         // Function to reset the form
         function resetForm() {
             const tableBody = document.getElementById('multiPcbTableBody');
@@ -418,6 +417,7 @@
                             currentQuantity = mainData.quantity || 0;
                         }
 
+                        
                         const date = new Date().toISOString().split('T')[0]; // Current date
 
                         // Update 'dipaksirrecord' collection under selectedPCB/data
