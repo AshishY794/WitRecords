@@ -1,0 +1,687 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WitBlox All PCB BOM </title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .htCenter {
+            text-align: center;
+        }
+
+
+
+        .bold {
+            font-weight: bold;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        #container {
+            margin: 0 auto;
+            width: 80%;
+        }
+
+
+        #spreadsheetWrapperEdit32 {
+            width: 95%;
+        }
+
+        /* Styling for the select box */
+        #pcbSelect {
+            padding: 10px 15px;
+            /* Padding inside the select box */
+            font-size: 16px;
+            /* Font size */
+            border: 1px solid #ccc;
+            /* Border color */
+            border-radius: 5px;
+            /* Rounded corners */
+            background-color: #f2f2f2;
+            /* Background color */
+            color: #333;
+            /* Text color */
+            cursor: pointer;
+            /* Pointer cursor */
+            outline: none;
+            /* Remove default focus outline */
+            transition: border-color 0.3s ease;
+            /* Smooth transition for border color */
+        }
+
+        /* Hover state */
+        #pcbSelect:hover {
+            border-color: #999;
+            /* Darker border color on hover */
+        }
+
+        /* Focus state */
+        #pcbSelect:focus {
+            border-color: #66afe9;
+            /* Highlight color on focus */
+            box-shadow: 0 0 5px rgba(102, 175, 233, 0.6);
+            /* Light shadow on focus */
+        }
+
+        label {
+            font-weight: bold;
+            margin-right: 10px;
+            /* Adjust spacing between label and select */
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            /* Stay in place */
+            z-index: 1000;
+            /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%;
+            /* Full width */
+            height: 100%;
+            /* Full height */
+            overflow: auto;
+            /* Enable scroll if needed */
+            background-color: rgba(0, 0, 0, 0.4);
+            /* Black background with opacity */
+        }
+
+        /* Modal content */
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 50%;
+            /* Could be more or less, depending on screen size */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), 0 6px 20px rgba(0, 0, 0, 0.19);
+            border-radius: 5px;
+        }
+
+        /* Close button */
+        .close {
+            color: #aaaaaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Form styles */
+        #pcbSelectionForm {
+            margin-top: 20px;
+        }
+
+        /* Checkbox styles */
+        label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        /* Button styles */
+        #confirmdownloadBtn32 {
+            background-color: #4CAF50;
+            /* Green */
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin-top: 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            border: none;
+        }
+
+        #confirmdownloadBtn32:hover {
+            background-color: #45a049;
+            /* Darker green */
+        }
+
+        /* Center the modal */
+        .modal-content {
+            text-align: center;
+        }
+
+        /* General button styles */
+        button {
+            background-color: #4CAF50;
+            /* Green background */
+            border: none;
+            /* Remove borders */
+            color: white;
+            /* White text */
+            padding: 15px 32px;
+            /* Some padding */
+            text-align: center;
+            /* Center the text */
+            text-decoration: none;
+            /* Remove underline */
+            display: inline-block;
+            /* Inline-block */
+            font-size: 16px;
+            /* Set a font size */
+            margin: 4px 2px;
+            /* Some margin */
+            cursor: pointer;
+            /* Pointer/hand icon */
+            border-radius: 12px;
+            /* Rounded corners */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            /* Add a shadow */
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            /* Smooth transition */
+        }
+
+        /* Hover state */
+        button:hover {
+            background-color: #45a049;
+            /* Darker green background */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            /* Larger shadow */
+        }
+
+        /* Active state */
+        button:active {
+            background-color: #3e8e41;
+            /* Even darker green background */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            /* Smaller shadow */
+        }
+
+        /* Button for closing modal */
+        .close {
+            color: #aaaaaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            /* Smooth transition for color change */
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+        }
+
+        /* Specific button styles */
+        #saveBtn32,
+        #cancelBtn32,
+        #downloadBtn32,
+        #confirmdownloadBtn32 {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            border: none;
+            transition: background-color 0.3s ease;
+            margin: 10px;
+        }
+
+        #saveBtn32:hover,
+        #cancelBtn32:hover,
+        #downloadBtn32:hover,
+        #confirmdownloadBtn32:hover {
+            background-color: #45a049;
+            /* Darker green on hover */
+        }
+
+        /* Modal button styles */
+        .modal .modal-content .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .modal .modal-content .close:hover,
+        .modal .modal-content .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+
+        /* Responsive layout - adjust modal width */
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 80%;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <h1>All PCB BOM</h1>
+    <label for="pcbSelect">Select PCB To See BOM: </label>
+    <select id="pcbSelect">
+        <option value="">Select PCB</option>
+    </select>
+
+    <div id="spreadsheetWrapperEdit32" style="margin-top: 20px; display: none;"></div>
+    <div id="loadingIndicator" style="display: none;">Loading...</div>
+
+    <br>
+
+    <div class="buttons">
+        <button id="saveBtn32" style="display: none;">Save</button>
+        <button id="cancelBtn32" style="display: none;">Cancel</button> <!-- Cancel button for first dropdown -->
+    </div>
+
+
+
+    <button id="downloadBtn32">Download BOM</button>
+
+    <!-- Modal for selecting PCBs to download -->
+    <div id="pcbModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closes">&times;</span>
+            <h2>Select PCBs to Download BOM</h2>
+            <form id="pcbSelectionForm">
+                <!-- Checkboxes for each PCB name -->
+            </form>
+            <button id="confirmdownloadBtn32">Download</button>
+        </div>
+    </div>
+
+    <a href="../index.html"><Button>Home</Button></a>
+
+    <script src="https://cdn.jsdelivr.net/npm/handsontable@latest/dist/handsontable.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable@latest/dist/handsontable.full.min.css">
+    <script type="module">
+
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-app.js';
+        import { getFirestore, collection, doc, writeBatch, getDocs, query, orderBy, limit, startAfter } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0jbQgXGYAvX2znLQLflVfXUjREwl3JyY",
+            authDomain: "officetest-92e0d.firebaseapp.com",
+            projectId: "officetest-92e0d",
+            storageBucket: "officetest-92e0d.appspot.com",
+            messagingSenderId: "435215452631",
+            appId: "1:435215452631:web:75cd4ea4fb4d07b65be392"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        let hotInstance; // Handsontable instance for first dropdown
+        let allData = []; // Store all data for first dropdown here
+
+
+        // Array of PCB names
+        const pcbNames = [
+            "Power", "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR", "Motor Driver", "Wire Tap", "Button",
+            "AI", "Wifi Clip V1", "Wifi Clip V2", "Servo", "Logic Gate", "Toggle", "Touch", "Laser", "Solar", "Heat",
+            "New TX-RX", "Old TX-RX", "Magnet", "Record And Repeat", "AI Chat", "Clap", "Tongee"
+        ];
+
+        // Function to populate the first PCB select dropdown
+        function populatePCBSelect() {
+            const select = document.getElementById('pcbSelect');
+
+            // Clear existing options
+            select.innerHTML = '<option value="">Select PCB</option>';
+
+            // Add options for each PCB name
+            pcbNames.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            });
+        }
+
+
+        
+        populatePCBSelect();
+
+        document.getElementById('pcbSelect').addEventListener('change', async function () {
+            const selectedPCB = this.value;
+
+            if (selectedPCB) {
+                await initializeSpreadsheet(selectedPCB, 'spreadsheetWrapperEdit32', 'saveBtn32', hotInstance, allData, 'PcbBom');
+            } else {
+                hideSpreadsheet('spreadsheetWrapperEdit32', 'saveBtn32');
+            }
+        });
+
+
+        async function fetchPCBData(pcbName, batchSize = 10, collectionType = 'PcbBom') {
+            let lastVisible = null;
+            let fetchedData = [];
+
+            while (true) {
+                const q = query(
+                    collection(db, collectionType, pcbName, 'data'),
+                    orderBy('position'), // Order by 'position' instead of 'date'
+                    startAfter(lastVisible || 0),
+                    limit(batchSize)
+                );
+
+                const querySnapshot = await getDocs(q);
+                if (querySnapshot.empty) break;
+
+                querySnapshot.forEach((doc) => {
+                    // Adjust data fetching based on your Firestore document structure
+                    const data = {
+                        position: doc.data().position,
+                        component: doc.data().component,
+                        quantity: doc.data().quantity
+                    };
+                    fetchedData.push(data);
+                });
+
+                lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
+            }
+
+            return fetchedData;
+        }
+
+        async function initializeSpreadsheet(pcbName, wrapperId, saveBtn32Id, hotInstanceRef, allDataRef, collectionType) {
+            const container = document.getElementById(wrapperId);
+            const loadingIndicator = document.getElementById('loadingIndicator');
+
+            if (!container) {
+                console.error(`Container ${wrapperId} not found.`);
+                return;
+            }
+
+            // Show loading indicator
+            loadingIndicator.style.display = 'block';
+
+            // Fetch existing data for the selected PCB from Firestore
+            try {
+                allDataRef = await fetchPCBData(pcbName, 20, collectionType);
+
+                // Add a new row for new entries
+                allDataRef.push({
+                    position: '',
+                    component: '',
+                    quantity: ''
+                });
+
+                // Create a new Handsontable instance with read-only configuration
+                hotInstanceRef = new Handsontable(container, {
+                    data: allDataRef,
+                    rowHeaders: true,
+                    colHeaders: ['Position', 'Component', 'Quantity'],
+                    columns: [
+                        { data: 'position', type: 'text' },
+                        { data: 'component', type: 'text' },
+                        { data: 'quantity', type: 'numeric' }
+                    ],
+                    minSpareRows: 1,
+                    stretchH: 'all',
+                    height: 400, // Initial height
+                    licenseKey: 'non-commercial-and-evaluation',
+                });
+
+                // Calculate the height of spreadsheetWrapperEdit32 based on its content
+                const totalRowsHeight = (allDataRef.length + 1) * 25; // Assuming row height is 25px, add extra row
+                const minHeight = 150; // Minimum height
+                const height = Math.max(totalRowsHeight, minHeight);
+                container.style.height = height + 'px';
+
+                container.style.display = 'block'; // Display the spreadsheet container
+
+                // Show save button
+                document.getElementById(saveBtn32Id).style.display = 'inline';
+                document.getElementById(`cancelBtn32${wrapperId === 'spreadsheetWrapperEdit32' ? '' : '2'}`).style.display = 'inline';
+
+                // Update the global references
+                if (wrapperId === 'spreadsheetWrapperEdit32') {
+                    hotInstance = hotInstanceRef;
+                    allData = allDataRef;
+                } else if (wrapperId === 'spreadsheetWrapperEdit322') {
+                    hotInstance2 = hotInstanceRef;
+                    allData2 = allDataRef;
+                }
+            } catch (error) {
+                console.error('Error fetching data: ', error);
+                alert('Error fetching data. Please try again.');
+            } finally {
+                // Hide loading indicator
+                loadingIndicator.style.display = 'none';
+            }
+        }
+        function hideSpreadsheet(wrapperId, saveBtn32Id) {
+            document.getElementById(wrapperId).style.display = 'none';
+            document.getElementById(saveBtn32Id).style.display = 'none';
+        }
+
+        document.getElementById('saveBtn32').addEventListener('click', async () => {
+            if (!hotInstance) return;
+
+            const selectedPCB = document.getElementById('pcbSelect').value;
+            if (!selectedPCB) {
+                console.error('No PCB selected.');
+                return;
+            }
+
+            const updatedData = hotInstance.getData().slice(0, -1); // Exclude the last empty row
+            const batch = writeBatch(db);
+
+            updatedData.forEach((row, index) => {
+                const position = row[0];
+                const component = row[1];
+                const quantity = parseInt(row[2], 10); // Ensure quantity is an integer
+
+                if (isNaN(quantity)) {
+                    alert(`Invalid quantity value at row ${index + 1}: ${row[2]}`);
+                    return;
+                }
+
+                const docRef = doc(collection(db, 'PcbBom', selectedPCB, 'data'), `entry${index + 1}`);
+                batch.set(docRef, { position, component, quantity });
+            });
+
+            try {
+                await batch.commit();
+                alert('Data saved successfully.');
+
+                // Hide Handsontable and clear data
+                hideHandsontable('spreadsheetWrapperEdit32', 'saveBtn32');
+
+            } catch (error) {
+                console.error('Error saving data: ', error);
+                alert('Error saving data. Please try again.');
+            }
+        });
+
+
+        function hideHandsontable(wrapperId, saveBtn32Id) {
+            // Hide Handsontable
+            document.getElementById(wrapperId).style.display = 'none';
+
+            // Hide save button
+            document.getElementById(saveBtn32Id).style.display = 'none';
+
+            // Hide cancel button
+            document.getElementById(`cancelBtn32${wrapperId === 'spreadsheetWrapperEdit32' ? '' : '2'}`).style.display = 'none';
+
+            // Optionally clear data (if needed)
+            if (wrapperId === 'spreadsheetWrapperEdit32') {
+                hotInstance.destroy();
+                allData = []; // Clear data array
+            } else if (wrapperId === 'spreadsheetWrapperEdit322') {
+                hotInstance2.destroy();
+                allData2 = []; // Clear data array
+            }
+        }
+
+
+        // Function to handle cancel button click for the first Handsontable
+        document.getElementById('cancelBtn32').addEventListener('click', function () {
+            const selectedPCB = document.getElementById('pcbSelect').value;
+            if (selectedPCB) {
+                hideHandsontable('spreadsheetWrapperEdit32', 'saveBtn32');
+            }
+        });
+
+
+        // download bom 
+
+
+
+
+        // Array of PCB names
+        const pcbNames1 = [
+            "Power", "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR", "Motor Driver", "Wire Tap", "Button",
+            "AI", "Wifi Clip V1", "Wifi Clip V2", "Servo", "Logic Gate", "Toggle", "Touch", "Laser", "Solar", "Heat",
+            "New TX-RX", "Old TX-RX", "Magnet", "Record And Repeat", "AI Chat", "Clap", "Tongee"
+        ];
+
+        // Function to create checkboxes dynamically
+        function createCheckboxes() {
+            const form = document.getElementById('pcbSelectionForm');
+            pcbNames1.forEach(name => {
+                const label = document.createElement('label');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.name = 'pcbName';
+                checkbox.value = name;
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(` ${name}`));
+                label.appendChild(document.createElement('br'));
+                form.appendChild(label);
+            });
+        }
+
+        // Call the function to create checkboxes when the modal is shown
+        document.getElementById('downloadBtn32').addEventListener('click', function () {
+            createCheckboxes();
+            openModal();
+        });
+
+        // Function to handle modal display
+        function openModal() {
+            const modal = document.getElementById('pcbModal');
+            modal.style.display = 'block';
+        }
+
+        // Function to close the modal
+        function closeModal() {
+            const modal = document.getElementById('pcbModal');
+            modal.style.display = 'none';
+        }
+
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function (event) {
+            const modal = document.getElementById('closes');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        // Add event listener for the download button
+        document.getElementById('downloadBtn32').addEventListener('click', function () {
+            openModal();
+        });
+
+        // Add event listener for the confirm download button in the modal
+        document.getElementById('confirmdownloadBtn32').addEventListener('click', async function () {
+            const form = document.getElementById('pcbSelectionForm');
+            const selectedPCBs = Array.from(form.querySelectorAll('input[name="pcbName"]:checked'))
+                .map(checkbox => checkbox.value);
+
+            if (selectedPCBs.length === 0) {
+                alert('Please select at least one PCB to download.');
+                return;
+            }
+
+            try {
+                // Download BOM data for selected PCBs
+                await downloadBOM(selectedPCBs);
+                closeModal(); // Close modal after download
+            } catch (error) {
+                console.error('Error downloading BOM:', error);
+                alert('Error downloading BOM. Please try again.');
+            }
+        });
+
+        // Function to download BOM data for selected PCBs
+        async function downloadBOM(selectedPCBs) {
+            const batch = writeBatch(db);
+            const downloadPromises = [];
+
+            selectedPCBs.forEach(pcbName => {
+                const q = query(
+                    collection(db, 'PcbBom', pcbName, 'data'),
+                    orderBy('position') // Order by 'position'
+                );
+
+                downloadPromises.push(getDocs(q).then(querySnapshot => {
+                    const bomData = [];
+                    querySnapshot.forEach(doc => {
+                        bomData.push(doc.data());
+                    });
+                    return { pcbName, bomData };
+                }));
+            });
+
+            const results = await Promise.all(downloadPromises);
+
+            // Prepare data for download (e.g., CSV format)
+            results.forEach(result => {
+                const { pcbName, bomData } = result;
+                const csvContent = `Position,Component,Quantity\n${bomData.map(entry => `${entry.position},${entry.component},${entry.quantity}`).join('\n')}`;
+
+                // Create a blob with CSV content
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                if (link.download !== undefined) {
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute("href", url);
+                    link.setAttribute("download", `${pcbName}_BOM.csv`);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } else {
+                    alert('Your browser does not support downloading files programmatically. Please try a different browser.');
+                }
+            });
+
+            alert('BOM data downloaded successfully.');
+        }
+
+
+    </script>
+</body>
+
+</html>

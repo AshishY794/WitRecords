@@ -329,8 +329,8 @@
         ];
 
 
-            // Function to reset the form
-            function resetForm() {
+        // Function to reset the form
+        function resetForm() {
             const tableBody = document.getElementById('multiPcbTableBody');
             tableBody.innerHTML = `
         <tr>
@@ -351,7 +351,7 @@
                 select.value = '';
             });
         }
-        
+
         // Function to populate the first PCB select dropdown
         function populatePCBSelect() {
             const select = document.getElementById('pcbSelect');
@@ -411,8 +411,8 @@
             });
         });
 
-       // / Event listener for saving multiple PCBs
-       document.getElementById('saveMultiBtn').addEventListener('click', async () => {
+        // / Event listener for saving multiple PCBs
+        document.getElementById('saveMultiBtn').addEventListener('click', async () => {
             const rows = document.querySelectorAll('#multiPcbTableBody tr');
             const batch = writeBatch(db);
             const promises = [];
@@ -464,6 +464,7 @@
             }
         }); // Function to populate the first PCB select dropdown
 
+        
 
         // Function to populate the second PCB select dropdown
         function populatePCBSelect2() {
@@ -507,6 +508,8 @@
                 hideSpreadsheet('spreadsheetWrapperEdit', 'saveBtn');
             }
         });
+
+
 
         document.getElementById('pcbSelect2').addEventListener('change', async function () {
             const selectedPCB = this.value;
