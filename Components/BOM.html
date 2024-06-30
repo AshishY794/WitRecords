@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WitBlox All PCB BOM </title>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -177,7 +178,7 @@
             /* Remove borders */
             color: white;
             /* White text */
-            padding: 15px 32px;
+            padding: 9px 20px;
             /* Some padding */
             text-align: center;
             /* Center the text */
@@ -322,6 +323,10 @@
 
     <a href="../index.html"><Button>Home</Button></a>
 
+    <div id="dataTableBody">
+
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/handsontable@latest/dist/handsontable.full.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable@latest/dist/handsontable.full.min.css">
     <script type="module">
@@ -368,7 +373,7 @@
         }
 
 
-        
+
         populatePCBSelect();
 
         document.getElementById('pcbSelect').addEventListener('change', async function () {
@@ -679,6 +684,108 @@
 
             alert('BOM data downloaded successfully.');
         }
+
+
+
+
+
+        // for components minus code 
+
+
+
+
+        // Function to retrieve and display data
+        // async function retrieveData() {
+        //     const tableBody = document.getElementById('dataTableBody');
+        //     tableBody.innerHTML = ''; // Clear existing rows
+
+        //     try {
+        //         for (let i = 0; i < pcbNames.length; i++) {
+        //             const selectedPCB = pcbNames[i];
+        //             const q = query(collection(db, 'newPcbDataForComRecord', selectedPCB, 'data'));
+        //             const querySnapshot = await getDocs(q);
+
+        //             querySnapshot.forEach((doc) => {
+        //                 const data = doc.data();
+        //                 console.log(data)
+
+        //                 const date = data.date || '';
+        //                 const quantity = data.quantity || 0;
+
+
+        //                 // Create a new row and append it to the table body
+        //                 const row = document.createElement('tr');
+        //                 const pcbCell = document.createElement('td');
+        //                 const dateCell = document.createElement('td');
+        //                 const quantityCell = document.createElement('td');
+
+        //                 pcbCell.textContent = selectedPCB;
+        //                 dateCell.textContent = date;
+        //                 quantityCell.textContent = quantity;
+
+        //                 row.appendChild(pcbCell);
+        //                 row.appendChild(dateCell);
+        //                 row.appendChild(quantityCell);
+        //                 tableBody.appendChild(row);
+
+        //             });
+
+
+        //         }
+        //     } catch (error) {
+        //         console.error('Error retrieving data: ', error);
+        //         alert('Error retrieving data. Please try again.');
+        //     }
+        // }
+        // retrieveData()
+//         const pcbNames = [
+//     "Power", "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR", "Motor Driver", "Wire Tap", "Button",
+//     "AI", "Wifi Clip V1", "Wifi Clip V2", "Servo", "Logic Gate", "Toggle", "Touch", "Laser", "Solar", "Heat",
+//     "New TX-RX", "Old TX-RX", "Magnet", "Record And Repeat", "AI Chat", "Clap", "Tongee"
+// ];
+
+// async function retrieveData() {
+//     try {
+//         console.log('Fetching data from newPcbDataForComRecord...');
+
+//         // Initialize an array to collect all retrieved data
+//         let allData = [];
+
+//         // Loop through each PCB name in pcbNames array
+//         for (let i = 0; i < pcbNames.length; i++) {
+//             const selectedPCB = pcbNames[i];
+
+//             // Construct reference to the document in newPcbDataForComRecord collection
+//             const docRef = doc(db, 'newPcbDataForComRecord', selectedPCB);
+
+//             // Get the 'data' collection under the selected document
+//             const q = collection(docRef, 'data');
+//             const querySnapshot = await getDocs(q);
+
+//             // Process each document in the query snapshot
+//             querySnapshot.forEach((doc) => {
+//                 const data = doc.data();
+//                 console.log('Document ID:', doc.id);
+//                 console.log('Data:', data);
+
+//                 // Push data to allData array for further processing if needed
+//                 allData.push(data);
+
+//                 // Access individual fields if needed
+//                 // const date = data.date || '';
+//                 // const quantity = data.quantity || 0;
+//             });
+//         }
+
+//         console.log('All Data:', allData); // Optionally log all retrieved data
+
+//     } catch (error) {
+//         console.error('Error retrieving data: ', error);
+//         alert('Error retrieving data. Please check the console for details.');
+//     }
+// }
+
+// retrieveData();
 
 
     </script>
