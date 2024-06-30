@@ -300,6 +300,7 @@
         <button id="saveMultiBtn">Save All</button>
 
         <center> <a href="../index.html"><Button>Home</Button></a></center><br><br>
+      
 
 
     </div>
@@ -464,7 +465,7 @@
             }
         }); // Function to populate the first PCB select dropdown
 
-        
+
 
         // Function to populate the second PCB select dropdown
         function populatePCBSelect2() {
@@ -509,6 +510,10 @@
             }
         });
 
+
+
+// Attach the retrieveData function to an event
+// document.getElementById('retrieveDataBtn').addEventListener('click', retrieveData);
 
 
         document.getElementById('pcbSelect2').addEventListener('change', async function () {
@@ -694,58 +699,62 @@
 
 
         document.getElementById('saveBtn').addEventListener('click', async () => {
-            if (!hotInstance) return;
+    if (!hotInstance) return;
 
-            const selectedPCB = document.getElementById('pcbSelect').value;
-            if (!selectedPCB) {
-                console.error('No PCB selected.');
-                return;
-            }
+    const selectedPCB = document.getElementById('pcbSelect').value;
+    if (!selectedPCB) {
+        console.error('No PCB selected.');
+        return;
+    }
 
-            const updatedData = hotInstance.getData().slice(0, -1); // Exclude the last empty row
-            const batch = writeBatch(db);
+    const updatedData = hotInstance.getData().slice(0, -1); // Exclude the last empty row
+    const batch = writeBatch(db);
 
-            // Fetch current quantity from 'dipakmaindata' if it exists
-            let currentQuantity = 0;
-            const mainDataDocRef = doc(collection(db, 'dipakmaindata'), selectedPCB);
-            const mainDataDocSnap = await getDoc(mainDataDocRef);
-            if (mainDataDocSnap.exists()) {
-                const mainData = mainDataDocSnap.data();
-                currentQuantity = mainData.quantity || 0;
-            }
+    // Fetch current quantity from 'dipakmaindata' if it exists
+    let currentQuantity = 0;
+    const mainDataDocRef = doc(collection(db, 'dipakmaindata'), selectedPCB);
+    const mainDataDocSnap = await getDoc(mainDataDocRef);
+    if (mainDataDocSnap.exists()) {
+        const mainData = mainDataDocSnap.data();
+        currentQuantity = mainData.quantity || 0;
+    }
 
-            updatedData.forEach((row, index) => {
-                const date = row[0];
-                const quantity = parseInt(row[1], 10); // Ensure quantity is an integer
+    updatedData.forEach((row, index) => {
+        const date = row[0];
+        const quantity = parseInt(row[1], 10); // Ensure quantity is an integer
 
-                if (isNaN(quantity)) {
-                    alert(`Invalid quantity value at row ${index + 1}: ${row[1]}`);
-                    return;
-                }
+        if (isNaN(quantity)) {
+            alert(`Invalid quantity value at row ${index + 1}: ${row[1]}`);
+            return;
+        }
 
-                // Update 'dipaksirrecord' collection under selectedPCB/data
-                const docRef = doc(collection(db, 'dipaksirrecord', selectedPCB, 'data'), `entry${index + 1}`);
-                batch.set(docRef, { date, quantity });
+        // Update 'dipaksirrecord' collection under selectedPCB/data
+        const docRef = doc(collection(db, 'dipaksirrecord', selectedPCB, 'data'), `entry${index + 1}`);
+        batch.set(docRef, { date, quantity });
 
-                // Calculate new total quantity for 'dipakmaindata'
-                const totalQuantity = currentQuantity + quantity;
+        // Update 'newPcbDataForComRecord' collection under selectedPCB/data
+        const newPcbDocRef = doc(collection(db, 'newPcbDataForComRecord', selectedPCB, 'data'), `entry${index + 1}`);
+        batch.set(newPcbDocRef, { date, quantity });
 
-                // Update 'dipakmaindata' collection under selectedPCB with new total quantity
-                batch.set(mainDataDocRef, { pcbName: selectedPCB, quantity: totalQuantity });
-            });
+        // Calculate new total quantity for 'dipakmaindata'
+        currentQuantity += quantity;
+    });
 
-            try {
-                await batch.commit();
-                alert('Data saved successfully.');
+    // Update 'dipakmaindata' collection under selectedPCB with new total quantity
+    batch.set(mainDataDocRef, { pcbName: selectedPCB, quantity: currentQuantity });
 
-                // Hide Handsontable and clear data
-                hideHandsontable('spreadsheetWrapperEdit', 'saveBtn');
+    try {
+        await batch.commit();
+        alert('Data saved successfully.');
 
-            } catch (error) {
-                console.error('Error saving data: ', error);
-                alert('Error saving data. Please try again.');
-            }
-        });
+        // Hide Handsontable and clear data
+        hideHandsontable('spreadsheetWrapperEdit', 'saveBtn');
+
+    } catch (error) {
+        console.error('Error saving data: ', error);
+        alert('Error saving data. Please try again.');
+    }
+});
 
 
 
