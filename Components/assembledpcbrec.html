@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WitBlox PCB Records</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+  <!-- <h1>WitBlox PCB's Records</h1> -->
+  <!-- Container for the spreadsheet -->
+  <h2>Available Assembled PCB In Records</h2>
+  <div id="spreadsheetWrapper" class="spreadsheet-wrapper"></div>
+  <!-- Container for buttons -->
+
+  <div class="button-area">
+    <button id="csvDownloadBtn">Download CSV</button>
+  </div>
+  <h2>Available Assembled PCB In Stock </h2>
+  <div id="blixPcbsWrapper"></div>
+  <br>
+  <!-- Container for the spreadsheet without PCBs in stock -->
+  <h2>No Assembled PCB's In Stock</h2>
+  <div id="spreadsheetWrapperNoStock" class="spreadsheet-wrapper"></div>
+
+
+
+  <br><br>
+  <div id="bloxNameModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Select Blox</h2>
+      <form id="bloxNameForm">
+        <!-- Checkbox options will be dynamically inserted here -->
+      </form>
+      <button id="confirmBloxNamesBtn">Add</button>
+    </div>
+  </div>
+
+  <h1>See All Records</h1>
+  <center>
+    <!-- Dropdown for saved dates -->
+    <label for="dateDropdown">Select Date:</label>
+    <select id="dateDropdown">
+      <option value="">Select date...</option>
+    </select>
+  </center>
+  <button id="showDataBtn">Show</button>
+  <br>
+  <center>
+    <H1>Add PCB Data</H1>
+    <!-- Date Picker -->
+    <label for="datepicker">Select Date:</label>
+    <input type="text" id="datepicker" placeholder="Select date...">
+    <!-- Notes Input --> <br>
+    <label for="notes">Notes:</label><br>
+    <textarea id="notes" placeholder="Enter notes..."></textarea>
+  </center>
+
+  <!-- Button to open spreadsheet -->
+  <button id="openSpreadsheetBtn">Add Data</button>
+
+  <!-- Container for the spreadsheet -->
+  <div id="spreadsheetContainer">
+    <button id="addBloxBtn" style="position: absolute; bottom: 10px; right: 10px; margin-bottom: 20px">Add Blox</button>
+
+  </div>
+
+  <!-- Save, Reset, Show, and Cancel buttons -->
+  <button id="saveDataBtn">Save</button>
+  <button id="resetFormBtn" style="display: none;">Reset</button>
+  <button id="cancelSpreadsheetBtn">Cancel</button>
+
+
+  <a href="../index.html"><button id="homebutton">Home</button></a><br><br>
+
+  <!-- Handsontable script -->
+  <script src="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-app.js';
+    import { getFirestore, collection, doc, setDoc, getDoc, getDocs } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-firestore.js';
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyC0jbQgXGYAvX2znLQLflVfXUjREwl3JyY",
+      authDomain: "officetest-92e0d.firebaseapp.com",
+      projectId: "officetest-92e0d",
+      storageBucket: "officetest-92e0d.appspot.com",
+      messagingSenderId: "435215452631",
+      appId: "1:435215452631:web:75cd4ea4fb4d07b65be392"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // // Declare global variables
+    // let hot; // Handsontable instance
+    let selectedDate = ""; // Variable to store selected date
+
+
+    let hot; // Handsontable instance
+    let selectedBloxNames = []; // Variable to store selected blox names
+
+    // Function to initialize Handsontable instance
+    function openSpreadsheet() {
+      const container = document.getElementById('spreadsheetContainer');
+
+      // Destroy any existing Handsontable instance if it exists
+      if (hot) {
+        hot.destroy();
+      }
+
+      // Create a new Handsontable instance
+      hot = new Handsontable(container, {
+        data: [], // Initial data array
+        rowHeaders: true,
+        colHeaders: ['Blox Name', 'Input', 'Output', 'Reminder'],
+        columns: [
+          {
+            data: 'bloxName', editor: 'dropdown', // Use dropdown editor for bloxName
+            source: selectedBloxNames // Initial dropdown options
+          },
+          { data: 'input', type: 'numeric' },
+          { data: 'output', type: 'numeric' },
+          { data: 'reminder', readOnly: true }
+        ],
+        minSpareRows: 1, // Allow adding new rows
+        contextMenu: true,
+        manualColumnResize: true,
+        manualRowResize: true,
+        stretchH: 'all',
+        height: 400,
+        licenseKey: 'non-commercial-and-evaluation',
+        afterChange: function (changes, source) {
+          if (changes) {
+            changes.forEach(([row, prop, oldVal, newVal]) => {
+              if (prop === 'input' || prop === 'output') {
+                const input = this.getDataAtRowProp(row, 'input');
+                const output = this.getDataAtRowProp(row, 'output');
+                if (input != null && output != null) {
+                  const reminder = input - output;
+                  this.setDataAtRowProp(row, 'reminder', reminder);
+                }
+              }
+            });
+          }
+        }
+      });
+
+      // Show the Cancel button and hide the Add Data button
+      document.getElementById('openSpreadsheetBtn').style.display = 'none';
+      document.getElementById('cancelSpreadsheetBtn').style.display = 'block';
+      document.getElementById('resetFormBtn').style.display = 'block'; // Show the Reset button
+      document.getElementById('saveDataBtn').style.display = 'block'; // Show the Save button
+      container.style.display = 'block'; // Display the spreadsheet container
+    }
+
+
+
+    function populateBloxNameModal() {
+      const modal = document.getElementById('bloxNameModal');
+      const form = document.getElementById('bloxNameForm');
+
+      // Replace this with your actual blox names data source
+      const bloxNames = [
+        'Power', 'Lamp', 'Buzzer', 'Invert', 'Dark', 'Distance', 'IR', 'Motor Driver',
+        'Wire Tap', 'Button', 'AI', 'Wifi Clip V1', 'wifi Clip V2', 'Servo', 'Logic Gate',
+        'Toggle', 'Touch', 'Laser', 'Solar', 'Heat', 'New TX-RX', 'Old TX-RX', 'Magnet',
+        'Record And Repete', 'AI Chat', 'Clap', 'Tongee'
+      ];
+
+      const blixPcbs = {
+        heading: 'BlixPcbs',
+        items: ['Blix Power', 'Blix Led', 'Blix Buzzer', 'Blix Not', 'Blix Motor Driver', 'Blix Distance', 'Blix IR', 'Blix Switch']
+      };
+
+      // Clear previous checkboxes
+      form.innerHTML = '';
+
+      bloxNames.forEach((bloxName) => {
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.name = 'bloxName';
+        checkbox.value = bloxName;
+        checkbox.id = bloxName;
+
+        const label = document.createElement('label');
+        label.htmlFor = bloxName;
+        label.appendChild(document.createTextNode(bloxName));
+
+        form.appendChild(checkbox);
+        form.appendChild(label);
+        form.appendChild(document.createElement('br'));
+      });
+
+      // Add heading for BlixPcbs
+      const headingLabel = document.createElement('h3');
+      headingLabel.appendChild(document.createTextNode(blixPcbs.heading));
+      form.appendChild(headingLabel);
+
+      // Add checkboxes for BlixPcbs items
+      blixPcbs.items.forEach((item) => {
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.name = 'bloxName';
+        checkbox.value = item;
+        checkbox.id = item;
+
+        const label = document.createElement('label');
+        label.htmlFor = item;
+        label.appendChild(document.createTextNode(item));
+
+        form.appendChild(checkbox);
+        form.appendChild(label);
+        form.appendChild(document.createElement('br'));
+      });
+
+      // Show the modal
+      modal.style.display = 'block';
+
+      // Close modal if close button or outside modal is clicked
+      modal.getElementsByClassName('close')[0].onclick = function () {
+        modal.style.display = 'none';
+      };
+
+      // Handle Add button click in the modal
+      document.getElementById('confirmBloxNamesBtn').onclick = function () {
+        const selectedBloxNames = []; // Clear previous selections
+        const checkboxes = document.getElementsByName('bloxName');
+        checkboxes.forEach((checkbox) => {
+          if (checkbox.checked) {
+            selectedBloxNames.push(checkbox.value);
+          }
+        });
+
+        // Update Handsontable column with selected blox names
+        updateBloxNameColumn(selectedBloxNames);
+
+        // Automatically fill Blox Name column with selected blox names
+        fillBloxNameColumn(selectedBloxNames);
+
+        // Close the modal
+        modal.style.display = 'none';
+      };
+    }
+
+    // Function to update the Handsontable column with selected blox names
+    function updateBloxNameColumn(selectedBloxNames) {
+      if (hot) {
+        hot.updateSettings({
+          columns: [
+            {
+              data: 'bloxName', editor: 'dropdown',
+              source: selectedBloxNames
+            },
+            { data: 'input', type: 'numeric' },
+            { data: 'output', type: 'numeric' },
+            { data: 'reminder', readOnly: true }
+          ]
+        });
+      } else {
+        console.error('Handsontable instance not found');
+      }
+    }
+
+    // Function to automatically fill Blox Name column with selected blox names
+    function fillBloxNameColumn(selectedBloxNames) {
+      if (hot) {
+        const data = selectedBloxNames.map(bloxName => ({
+          bloxName: bloxName,
+          input: null,
+          output: null,
+          reminder: null
+        }));
+        hot.loadData(data);
+      } else {
+        console.error('Handsontable instance not found');
+      }
+    }
+
+
+    // Function to save data to Firestore
+    async function saveData() {
+      try {
+        if (!selectedDate) {
+          alert("Please select a date.");
+          return;
+        }
+
+        // Check if the date already exists in the database
+        const docRef = doc(db, `assembledpcbadd/${selectedDate}`);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          alert("The selected date already exists in the database. Please choose a different date.");
+          return;
+        }
+
+        const data = hot.getData(); // Get all data from Handsontable instance
+        const flattenedData = flattenData(data); // Flatten the nested array data
+        const notes = document.getElementById('notes').value; // Get notes
+
+        // Save data and notes to Firestore document
+        await setDoc(docRef, { data: flattenedData, notes: notes });
+
+        alert("Data and notes saved to Firestore under " + selectedDate); // Show a message to the user
+        resetForm(); // Reset the form after saving
+      } catch (error) {
+        console.error("Error adding document: ", error);
+        alert("Failed to save data to Firestore. Please try again.");
+      }
+    }
+
+    // Event listener for Add Data button click
+    document.getElementById('openSpreadsheetBtn').onclick = function () {
+      populateBloxNameModal();
+    };
+
+    // Event listener for Add Data button click
+    document.getElementById('openSpreadsheetBtn').onclick = function () {
+      populateBloxNameModal();
+    };
+
+
+    document.getElementById('addBloxBtn').onclick = function () {
+      populateBloxNameModal();
+    };
+
+    // Function to reset the form
+    function resetForm() {
+      // Reset selectedDate variable
+      selectedDate = "";
+
+      // Clear the flatpickr datepicker
+      datepicker.clear();
+
+      // Clear the notes field
+      document.getElementById('notes').value = "";
+
+      // Hide Cancel button and show Add Data button
+      document.getElementById('openSpreadsheetBtn').style.display = 'block';
+      document.getElementById('cancelSpreadsheetBtn').style.display = 'none';
+      document.getElementById('resetFormBtn').style.display = 'none'; // Hide the Reset button
+      document.getElementById('saveDataBtn').style.display = 'none'; // Show the Save button
+
+      // Hide the spreadsheet container
+      document.getElementById('spreadsheetContainer').style.display = 'none';
+
+      // Destroy Handsontable instance if it exists
+      if (hot) {
+        hot.destroy();
+        hot = null; // Reset hot instance to null
+      }
+    }
+
+
+    // Function to flatten nested array data
+    function flattenData(data) {
+      const flattenedData = [];
+
+      for (let row of data) {
+        const flatRow = {
+          bloxName: row[0],
+          input: row[1],
+          output: row[2],
+          reminder: row[3]
+        };
+        flattenedData.push(flatRow);
+      }
+
+      return flattenedData;
+    }
+
+
+
+
+
+    // Function to populate dropdown with saved dates
+    async function populateDropdown() {
+      const dropdown = document.getElementById('dateDropdown');
+      dropdown.innerHTML = ""; // Clear existing options
+
+      try {
+        const querySnapshot = await getDocs(collection(db, 'assembledpcbadd'));
+        querySnapshot.forEach((doc) => {
+          const date = doc.id;
+          const option = document.createElement('option');
+          option.value = date;
+          option.textContent = date.replaceAll('_', '/'); // Format date for display
+          dropdown.appendChild(option);
+        });
+      } catch (error) {
+        console.error("Error getting documents: ", error);
+        alert("Failed to retrieve saved dates from Firestore.");
+      }
+    }
+
+
+
+
+    // Function to display data for selected date
+    async function displaySelectedDate() {
+      const selected = document.getElementById('dateDropdown').value;
+
+      try {
+        const docRef = doc(db, `assembledpcbadd/${selected}/`);
+        const docSnapshot = await getDoc(docRef); // Use getDoc to fetch document snapshot
+
+        if (docSnapshot.exists()) {
+          const data = docSnapshot.data().data;
+          const notes = docSnapshot.data().notes || ""; // Get notes or default to empty string
+          document.getElementById('notes').value = notes; // Set notes field
+
+          if (hot) {
+            hot.loadData(data); // Load data into Handsontable instance if it exists
+            selectedDate = selected; // Update selectedDate
+          } else {
+            openSpreadsheet(); // Reinitialize spreadsheet view if hot instance is null
+            hot.loadData(data); // Load data into Handsontable instance
+            selectedDate = selected; // Update selectedDate
+          }
+        } else {
+          alert("No data found for selected date.");
+        }
+      } catch (error) {
+        console.error("Error getting document: ", error);
+        alert("Failed to retrieve data from Firestore.");
+      }
+    }
+
+
+
+
+    // Function to cancel and close the spreadsheet
+    function cancelSpreadsheet() {
+      // Check if Handsontable instance exists
+      if (hot) {
+        hot.destroy(); // Destroy Handsontable instance
+        hot = null; // Reset hot instance to null
+      }
+
+      resetForm(); // Reset the form (show Add Data button and hide Cancel button)
+    }
+
+    // Initialize flatpickr for date picker
+    const datepicker = flatpickr("#datepicker", {
+      dateFormat: "d/m/Y", // Format: day/month/year
+      onChange: function (selectedDates, dateStr, instance) {
+        selectedDate = dateStr.replaceAll('/', '_'); // Update selectedDate variable with underscores instead of slashes
+        console.log("Selected date:", selectedDate);
+      }
+    });
+
+    // Event listener for when the DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', function () {
+      const openBtn = document.getElementById('openSpreadsheetBtn');
+      const saveBtn = document.getElementById('saveDataBtn');
+      const resetBtn = document.getElementById('resetFormBtn');
+      const showBtn = document.getElementById('showDataBtn'); // Show button
+      const cancelBtn = document.getElementById('cancelSpreadsheetBtn'); // Cancel button
+
+      openBtn.addEventListener('click', openSpreadsheet);
+      saveBtn.addEventListener('click', saveData);
+      resetBtn.addEventListener('click', resetForm);
+      showBtn.addEventListener('click', displaySelectedDate); // Attach showDataBtn click event
+      cancelBtn.addEventListener('click', cancelSpreadsheet); // Attach cancelSpreadsheet click event
+
+      // Populate dropdown with saved dates on page load
+      populateDropdown();
+    });
+
+
+
+
+
+    // Event listener for when the DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', function () {
+      initializeNoStockSpreadsheet();
+    });
+
+
+    let hotInstance; // Handsontable instance for main data
+    let blixPcbsInstance; // Handsontable instance for Blix PCBs
+
+    async function initializeSpreadsheet() {
+      const container = document.getElementById('spreadsheetWrapper');
+      const blixContainer = document.getElementById('blixPcbsWrapper');
+
+      // Destroy any existing Handsontable instances if they exist
+      if (hotInstance) {
+        hotInstance.destroy();
+      }
+      if (blixPcbsInstance) {
+        blixPcbsInstance.destroy();
+      }
+
+      // Fetch data from Firestore
+      let allData = [];
+      let blixData = [];
+
+      try {
+        // Fetch data from 'sheetData' collection
+        const querySnapshot = await getDocs(collection(db, 'assembledpcbadd'));
+        const bloxData = {};
+
+        // Process data from 'sheetData'
+        querySnapshot.forEach((doc) => {
+          const data = doc.data().data;
+          data.forEach(row => {
+            if (row.bloxName) {
+              const quantity = row.reminder != null ? row.reminder : row.input || 0;
+              bloxData[row.bloxName] = (bloxData[row.bloxName] || 0) + quantity;
+            }
+          });
+        });
+
+        // Convert bloxData to an array of objects
+        allData = Object.keys(bloxData).map(bloxName => ({
+          bloxName,
+          reminder: bloxData[bloxName]
+        }));
+
+        // Filter out data where reminder is 0
+        allData = allData.filter(item => item.reminder !== 0);
+
+        // Define the preferred order of blox names
+        const preferredOrder = [
+          "Power", "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR",
+          "Motor Driver", "Wire Tap", "Button", "AI", "Wifi Clip V1", "wifi Clip V2", "Servo", "Logic Gate"
+        ];
+
+        // Sort allData to place preferred blox names first, then alphabetical
+        allData.sort((a, b) => {
+          const indexA = preferredOrder.indexOf(a.bloxName);
+          const indexB = preferredOrder.indexOf(b.bloxName);
+          if (indexA === -1 && indexB === -1) {
+            // Both are not in preferredOrder, sort alphabetically
+            return a.bloxName.localeCompare(b.bloxName);
+          } else if (indexA === -1) {
+            // Only b is in preferredOrder
+            return 1;
+          } else if (indexB === -1) {
+            // Only a is in preferredOrder
+            return -1;
+          } else {
+            // Both are in preferredOrder, compare their indices
+            return indexA - indexB;
+          }
+        });
+
+        // Separate Blix PCBs data
+        blixData = allData.filter(item => item.bloxName.startsWith('Blix'));
+        allData = allData.filter(item => !item.bloxName.startsWith('Blix'));
+
+        // Fetch 'dipakmaindata' and subtract quantities from 'allData'
+        const mainDataSnapshot = await getDocs(collection(db, 'dipaksirgivendata2'));
+        mainDataSnapshot.forEach((doc) => {
+          const { pcbName, quantity } = doc.data();
+          const index = allData.findIndex(item => item.bloxName === pcbName);
+          if (index !== -1) {
+            allData[index].reminder += quantity;
+          }
+        });
+
+        // Fetch 'Shirkhemaindata' and subtract quantities from 'allData' and 'blixData'
+        const shirkheDataSnapshot = await getDocs(collection(db, 'Shirkhesirrecordgiven2'));
+        shirkheDataSnapshot.forEach((doc) => {
+          const { pcbName, quantity } = doc.data();
+          const index = allData.findIndex(item => item.bloxName === pcbName);
+          if (index !== -1) {
+            allData[index].reminder += quantity;
+          }
+          const blixIndex = blixData.findIndex(item => item.bloxName === pcbName);
+          if (blixIndex !== -1) {
+            blixData[blixIndex].reminder += quantity;
+          }
+        });
+
+      } catch (error) {
+        console.error("Error getting documents: ", error);
+      }
+
+      // Create a new Handsontable instance with read-only configuration for main data
+      hotInstance = new Handsontable(container, {
+        data: allData, // Use filtered and adjusted data
+        rowHeaders: true,
+        colHeaders: ['Blox Name', 'We Have'],
+        columns: [
+          { data: 'bloxName' },
+          { data: 'reminder', type: 'numeric' }
+        ],
+        minSpareRows: 1, // Allow adding new rows
+        readOnly: true, // Make the spreadsheet view-only
+        stretchH: 'all',
+        height: 400,
+        licenseKey: 'non-commercial-and-evaluation'
+      });
+
+      // Ensure Blix data has at least one blank row if no data is present
+      if (blixData.length === 0) {
+        blixData.push({ bloxName: '', reminder: null });
+      }
+
+      // Create a new Handsontable instance with read-only configuration for Blix PCBs
+      blixPcbsInstance = new Handsontable(blixContainer, {
+        data: blixData, // Use filtered and adjusted Blix data
+        rowHeaders: true,
+        colHeaders: ['Blox Name', 'We Have'],
+        columns: [
+          { data: 'bloxName' },
+          { data: 'reminder', type: 'numeric' }
+        ],
+        minSpareRows: 1, // Allow adding new rows
+        readOnly: true, // Make the spreadsheet view-only
+        stretchH: 'all',
+        height: blixData.length > 0 ? blixData.length * 23 + 30 : 53, // Adjust height based on number of rows
+        licenseKey: 'non-commercial-and-evaluation'
+      });
+
+      container.style.display = 'block'; // Display the main spreadsheet container
+      blixContainer.style.display = 'block'; // Display the Blix PCBs spreadsheet container
+
+      // Initialize other parts of your application as needed
+
+      // Call fetchMainData to log 'dipakmaindata'
+      fetchMainData();
+      // Call fetchShirkheData to log 'Shirkhemaindata'
+      fetchShirkheData();
+    }
+
+    async function fetchMainData() {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'dipaksirgivendata2'));
+        querySnapshot.forEach((doc) => {
+          console.log(`${doc.id} => ${JSON.stringify(doc.data())}`);
+          // Access each document's data using doc.data()
+        });
+      } catch (error) {
+        console.error("Error fetching 'dipakmaindata': ", error);
+      }
+    }
+
+    async function fetchShirkheData() {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'Shirkhesirrecordgiven2'));
+        querySnapshot.forEach((doc) => {
+          console.log(`${doc.id} => ${JSON.stringify(doc.data())}`);
+          // Access each document's data using doc.data()
+        });
+      } catch (error) {
+        console.error("Error fetching 'Shirkhemaindata': ", error);
+      }
+    }
+
+    // Call initializeSpreadsheet to start initializing the spreadsheet
+    initializeSpreadsheet();
+
+
+
+
+    // Function to initialize Handsontable instance for no PCBs in stock
+    async function initializeNoStockSpreadsheet(bloxNamesWithZeroReminder = []) {
+      const container = document.getElementById('spreadsheetWrapperNoStock');
+
+      // Fetch all blox names and their reminder values from Firestore
+      let allBloxData = {};
+      try {
+        const querySnapshot = await getDocs(collection(db, 'assembledpcbadd'));
+        querySnapshot.forEach((doc) => {
+          const data = doc.data().data;
+          data.forEach(row => {
+            if (row.bloxName) {
+              if (!allBloxData[row.bloxName]) {
+                allBloxData[row.bloxName] = 0;
+              }
+              if (row.reminder != null) {
+                allBloxData[row.bloxName] += row.reminder;
+              } else {
+                allBloxData[row.bloxName] += row.input;
+              }
+            }
+          });
+        });
+      } catch (error) {
+        console.error("Error getting documents: ", error);
+        alert("Failed to retrieve PCB records from Firestore.");
+        return;
+      }
+
+      // Define the list of blox names you want to check
+      const bloxNamesToCheck = [
+        'Power', 'Lamp', 'Buzzer', 'Invert', 'Dark', 'Distance', 'IR', 'Motor Driver',
+        'Wire Tap', 'Button', 'AI', 'Wifi Clip V1', 'wifi Clip V2', 'Servo', 'Logic Gate',
+        'Toggle', 'Touch', 'Laser', 'Solar', 'Heat', 'New TX-RX', 'Old TX-RX', 'Magnet',
+        'Record And Repete', 'AI Chat', 'Clap', 'Tongee', 'Blix Power', 'Blix Led', 'Blix Buzzer', 'Blix Not', 'Blix Motor Driver', 'Blix Distance', 'Blix IR', 'Blix Switch'
+      ];
+
+      // Include blox names with zero reminders in the list to check
+      bloxNamesWithZeroReminder.forEach(bloxName => {
+        if (!bloxNamesToCheck.includes(bloxName)) {
+          bloxNamesToCheck.push(bloxName);
+        }
+      });
+
+      // Filter out blox names that are not in PCB records or have a reminder of 0
+      const bloxNamesNotInRecords = bloxNamesToCheck.filter(bloxName => !allBloxData[bloxName] || allBloxData[bloxName] === 0);
+
+      // Create the data array for Handsontable with blox names not in records or with a reminder of 0
+      const data = bloxNamesNotInRecords.map(bloxName => ({
+        bloxName: bloxName,
+        reminder: 0 // Set reminder to 0 for blox names not in records or with a reminder of 0
+      }));
+
+      // Create a new Handsontable instance with read-only configuration
+      const hotInstance = new Handsontable(container, {
+        data: data,
+        rowHeaders: true,
+        colHeaders: ['Blox Name', 'We Have'],
+        columns: [
+          { data: 'bloxName' },
+          { data: 'reminder', type: 'numeric' }
+        ],
+        minSpareRows: 1, // Allow adding new rows
+        readOnly: true, // Make the spreadsheet view-only
+        stretchH: 'all',
+        height: 200,
+        licenseKey: 'non-commercial-and-evaluation'
+      });
+
+      container.style.display = 'block'; // Display the spreadsheet container
+    }
+
+    // Event listener for when the DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', function () {
+      initializeSpreadsheet();
+
+      // Event listener for Download CSV button
+      document.getElementById('csvDownloadBtn').addEventListener('click', convertToCSV);
+    });
+
+    // Function to convert Handsontable data to CSV
+    function convertToCSV() {
+      const data = hotInstance.getData();
+      const csvContent = "data:text/csv;charset=utf-8,"
+        + data.map(row => row.join(",")).join("\n");
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "blox_availability.csv");
+      document.body.appendChild(link); // Required for Firefox
+      link.click(); // Trigger the download
+    }
+
+    // // Function to convert Handsontable data to CSV
+    // function convertToCSV() {
+    //   const data = hotInstance.getData();
+    //   const csvContent = "data:text/csv;charset=utf-8,"
+    //     + data.map(row => row.join(",")).join("\n");
+
+    //   const encodedUri = encodeURI(csvContent);
+    //   const link = document.createElement("a");
+    //   link.setAttribute("href", encodedUri);
+    //   link.setAttribute("download", "blox_availability.csv");
+    //   document.body.appendChild(link); // Required for Firefox
+    //   link.click(); // Trigger the download
+    // }
+
+    // Event listener for when the DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', function () {
+      initializeSpreadsheet();
+
+      // Event listener for Download CSV button
+      document.getElementById('csvDownloadBtn').addEventListener('click', convertToCSV);
+    });
+
+
+
+    
+
+
+  </script>
+
+
+</body>
+
+</html>
