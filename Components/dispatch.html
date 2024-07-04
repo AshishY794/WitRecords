@@ -8,6 +8,7 @@
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
+            align-items: ce;
         }
 
         #app {
@@ -19,6 +20,39 @@
         #gradeForm {
             margin-top: 20px;
         }
+
+        h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    h2 {
+        color: #666;
+        margin-top: 40px;
+    }
+
+
+    button {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        margin: 5px 0;
+    }
+
+    button:hover {
+        background-color: #0056b3;
+    }
+
+    button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+
 
         #checkboxes {
             display: flex;
@@ -49,12 +83,78 @@
         .checkbox-label {
             margin-right: 10px;
         }
+
+         /* General table styling */
+         table {
+            text-align: center;
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        /* Table headers */
+        th {
+            background-color: #f2f2f2;
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        /* Table cells */
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
+        /* Alternate row background color */
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        /* Table caption */
+        caption {
+            caption-side: top;
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 10px;
+            text-align: left;
+        }
+
+        /* Container padding */
+        #dataContainer {
+            padding: 20px;
+        }
+
+        #dateDropdown {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            width: 100%;
+            font-size: 16px;
+            background-color: #fff;
+            margin-top: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            /* background-image: url('data:image/svg+xml;charset=US-ASCII,<svg%20xmlns="http://www.w3.org/2000/svg"%20viewBox="0%200%204%205"><path%20fill="none"%20stroke="black"%20stroke-width="1"%20d="M0,1%20L2,4%20L4,1"/></svg>'); */
+            background-repeat: no-repeat;
+            background-position-x: 95%;
+            text-align: center;
+            background-position-y: 50%;
+        }
+
+        #dateDropdown:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
     </style>
 </head>
 
 <body>
     <div id="app">
-        <h1>Grade Management</h1>
+        <h1>Dispatch Record</h1>
         <button id="addDataButton">Add Data</button>
         <div id="formContainer" style="display: none;">
             <form id="gradeForm">
@@ -65,6 +165,8 @@
                 <button type="button" id="cancelButton" style="display: none;">Cancel</button>
             </form>
         </div>
+        <br>
+        <h2>Show Data</h2>
         <div>
             <label for="dateDropdown">Select Date:</label>
             <select id="dateDropdown">
@@ -76,6 +178,8 @@
         <div id="dataContainer">
             <!-- Data from Firestore will be displayed here -->
         </div>
+        <a href="../index.html"><button id="homebutton">Home</button></a><br><br>
+
     </div>
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-app.js';
@@ -286,37 +390,96 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     showDataButton.addEventListener("click", async function () {
-        const selectedDateId = dateDropdown.value;
-        if (selectedDateId) {
-            try {
-                const docRef = doc(db, "grades", selectedDateId);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    dataContainer.innerHTML = `
-                        <p>Grades:</p>
-                        ${data.grades.map(gq => `
-                            <p>${gq.grade ? `Grade ${gq.grade}` : gq.kit}: ${gq.quantity} </p>
-                            ${Object.entries(gq.components).map(([component, quantity]) => `
-                                <p>${component}: ${quantity}</p>
+    const selectedDateId = dateDropdown.value;
+    if (selectedDateId) {
+        try {
+            const docRef = doc(db, "grades", selectedDateId);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                
+                // Table for Grades and Kits
+                let gradesTable = `
+                    <table border="1">
+                        <thead>
+                            <tr>
+                                <th>Grade/Kit</th>
+                                <th>Quantity</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.grades.map(gq => `
+                                <tr>
+                                    <td>${gq.grade ? `Grade ${gq.grade}` : gq.kit}</td>
+                                    <td>${gq.quantity}</td>
+                                    <td>${new Date(data.date).toLocaleString()}</td>
+                                </tr>
                             `).join('')}
-                        `).join('')}
-                        
-                        <p>Aggregated Component Quantities:</p>
-                        ${Object.entries(data.aggregatedComponents).map(([component, totalQuantity]) => `
-                            <p>${component} Total: ${totalQuantity}</p>
-                        `).join('')}
-                        
-                        <p>Date: ${new Date(data.date).toLocaleString()}</p>
-                    `;
-                } else {
-                    dataContainer.innerHTML = "No data found.";
-                }
-            } catch (error) {
-                console.error("Error getting document: ", error);
+                        </tbody>
+                    </table>
+                `;
+
+                // Table for Components
+                let componentsTable = `
+                    <table border="1">
+                        <thead>
+                            <tr>
+                                <th>Grade</th>
+                                <th>Component</th>
+                                <th>Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.grades.map(gq => gq.components ? Object.entries(gq.components).map(([component, quantity]) => `
+                                <tr>
+                                    <td>${gq.grade ? `Grade ${gq.grade}` : gq.kit}</td>
+                                    <td>${component}</td>
+                                    <td>${quantity}</td>
+                                </tr>
+                            `).join('') : '').join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                // Table for Aggregated Components
+                let aggregatedTable = `
+                    <table border="1">
+                        <thead>
+                            <tr>
+                                <th>Component</th>
+                                <th>Total Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Object.entries(data.aggregatedComponents).map(([component, totalQuantity]) => `
+                                <tr>
+                                    <td>${component}</td>
+                                    <td>${totalQuantity}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                dataContainer.innerHTML = `
+                    <p>Grades and Kits:</p>
+                    ${gradesTable}
+                    
+                    <p>Components:</p>
+                    ${componentsTable}
+                    
+                    <p>Aggregated Component Quantities:</p>
+                    ${aggregatedTable}
+                `;
+            } else {
+                dataContainer.innerHTML = "No data found.";
             }
+        } catch (error) {
+            console.error("Error getting document: ", error);
         }
-    });
+    }
+});
 
     loadSavedData();
 });

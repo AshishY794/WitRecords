@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WitBlox PCB Records</title>
+  <title>WitBlox Assembled PCB Records</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link rel="stylesheet" href="style.css">
@@ -14,7 +14,7 @@
 <body>
   <!-- <h1>WitBlox PCB's Records</h1> -->
   <!-- Container for the spreadsheet -->
-  <h2>Available Assembled PCB In Records</h2>
+  <h2>Available Assembled PCBs</h2>
   <div id="spreadsheetWrapper" class="spreadsheet-wrapper"></div>
   <!-- Container for buttons -->
 
@@ -294,14 +294,14 @@
           return;
         }
 
-        // Check if the date already exists in the database
+        // // Check if the date already exists in the database
         const docRef = doc(db, `assembledpcbadd/${selectedDate}`);
         const docSnap = await getDoc(docRef);
 
-        if (docSnap.exists()) {
-          alert("The selected date already exists in the database. Please choose a different date.");
-          return;
-        }
+        // if (docSnap.exists()) {
+        //   alert("The selected date already exists in the database. Please choose a different date.");
+        //   return;
+        // }
 
         const data = hot.getData(); // Get all data from Handsontable instance
         const flattenedData = flattenData(data); // Flatten the nested array data
@@ -488,7 +488,6 @@
 
     let hotInstance; // Handsontable instance for main data
     let blixPcbsInstance; // Handsontable instance for Blix PCBs
-
     async function initializeSpreadsheet() {
       const container = document.getElementById('spreadsheetWrapper');
       const blixContainer = document.getElementById('blixPcbsWrapper');
@@ -506,11 +505,11 @@
       let blixData = [];
 
       try {
-        // Fetch data from 'sheetData' collection
+        // Fetch data from 'assembledpcbadd' collection
         const querySnapshot = await getDocs(collection(db, 'assembledpcbadd'));
         const bloxData = {};
 
-        // Process data from 'sheetData'
+        // Process data from 'assembledpcbadd'
         querySnapshot.forEach((doc) => {
           const data = doc.data().data;
           data.forEach(row => {
@@ -559,29 +558,30 @@
         blixData = allData.filter(item => item.bloxName.startsWith('Blix'));
         allData = allData.filter(item => !item.bloxName.startsWith('Blix'));
 
-        // Fetch 'dipakmaindata' and subtract quantities from 'allData'
-        const mainDataSnapshot = await getDocs(collection(db, 'dipaksirgivendata2'));
-        mainDataSnapshot.forEach((doc) => {
-          const { pcbName, quantity } = doc.data();
-          const index = allData.findIndex(item => item.bloxName === pcbName);
+        // Fetch grades data and subtract from assembledpcbadd
+        const gradesSnapshot = await getDocs(collection(db, 'grades'));
+        const gradesData = [];
+
+        gradesSnapshot.forEach(doc => {
+          const gradeData = doc.data().grades;
+          gradeData.forEach(grade => {
+            Object.entries(grade.components).forEach(([component, quantity]) => {
+              gradesData.push({ component, quantity });
+            });
+          });
+        });
+
+        console.log('Grades Data:', gradesData);
+
+        gradesData.forEach(({ component, quantity }) => {
+          const index = allData.findIndex(item => item.bloxName === component);
           if (index !== -1) {
-            allData[index].reminder += quantity;
+            allData[index].reminder -= quantity;
+            if (allData[index].reminder < 0) allData[index].reminder = 0;
           }
         });
 
-        // Fetch 'Shirkhemaindata' and subtract quantities from 'allData' and 'blixData'
-        const shirkheDataSnapshot = await getDocs(collection(db, 'Shirkhesirrecordgiven2'));
-        shirkheDataSnapshot.forEach((doc) => {
-          const { pcbName, quantity } = doc.data();
-          const index = allData.findIndex(item => item.bloxName === pcbName);
-          if (index !== -1) {
-            allData[index].reminder += quantity;
-          }
-          const blixIndex = blixData.findIndex(item => item.bloxName === pcbName);
-          if (blixIndex !== -1) {
-            blixData[blixIndex].reminder += quantity;
-          }
-        });
+        console.log('Updated Assembled Data:', allData);
 
       } catch (error) {
         console.error("Error getting documents: ", error);
@@ -627,37 +627,36 @@
       container.style.display = 'block'; // Display the main spreadsheet container
       blixContainer.style.display = 'block'; // Display the Blix PCBs spreadsheet container
 
-      // Initialize other parts of your application as needed
-
-      // Call fetchMainData to log 'dipakmaindata'
-      fetchMainData();
-      // Call fetchShirkheData to log 'Shirkhemaindata'
-      fetchShirkheData();
+   
     }
 
-    async function fetchMainData() {
-      try {
-        const querySnapshot = await getDocs(collection(db, 'dipaksirgivendata2'));
-        querySnapshot.forEach((doc) => {
-          console.log(`${doc.id} => ${JSON.stringify(doc.data())}`);
-          // Access each document's data using doc.data()
-        });
-      } catch (error) {
-        console.error("Error fetching 'dipakmaindata': ", error);
-      }
-    }
+    // Call initializeSpreadsheet when the DOM is fully loaded
+    // document.addEventListener('DOMContentLoaded', () => {
+    //   initializeSpreadsheet();
+    // });
+    // async function fetchMainData() {
+    //   try {
+    //     const querySnapshot = await getDocs(collection(db, 'dipaksirgivendata2'));
+    //     querySnapshot.forEach((doc) => {
+    //       console.log(`${doc.id} => ${JSON.stringify(doc.data())}`);
+    //       // Access each document's data using doc.data()
+    //     });
+    //   } catch (error) {
+    //     console.error("Error fetching 'dipakmaindata': ", error);
+    //   }
+    // }
 
-    async function fetchShirkheData() {
-      try {
-        const querySnapshot = await getDocs(collection(db, 'Shirkhesirrecordgiven2'));
-        querySnapshot.forEach((doc) => {
-          console.log(`${doc.id} => ${JSON.stringify(doc.data())}`);
-          // Access each document's data using doc.data()
-        });
-      } catch (error) {
-        console.error("Error fetching 'Shirkhemaindata': ", error);
-      }
-    }
+    // async function fetchShirkheData() {
+    //   try {
+    //     const querySnapshot = await getDocs(collection(db, 'Shirkhesirrecordgiven2'));
+    //     querySnapshot.forEach((doc) => {
+    //       console.log(`${doc.id} => ${JSON.stringify(doc.data())}`);
+    //       // Access each document's data using doc.data()
+    //     });
+    //   } catch (error) {
+    //     console.error("Error fetching 'Shirkhemaindata': ", error);
+    //   }
+    // }
 
     // Call initializeSpreadsheet to start initializing the spreadsheet
     initializeSpreadsheet();
@@ -754,7 +753,7 @@
       const encodedUri = encodeURI(csvContent);
       const link = document.createElement("a");
       link.setAttribute("href", encodedUri);
-      link.setAttribute("download", "blox_availability.csv");
+      link.setAttribute("download", "assembled_blox.csv");
       document.body.appendChild(link); // Required for Firefox
       link.click(); // Trigger the download
     }
@@ -783,7 +782,7 @@
 
 
 
-    
+
 
 
   </script>
