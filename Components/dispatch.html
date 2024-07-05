@@ -22,36 +22,36 @@
         }
 
         h1 {
-        color: #333;
-        text-align: center;
-        margin-bottom: 20px;
-    }
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
 
-    h2 {
-        color: #666;
-        margin-top: 40px;
-    }
+        h2 {
+            color: #666;
+            margin-top: 40px;
+        }
 
 
-    button {
-        background-color: #007bff;
-        color: #fff;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-        margin: 5px 0;
-    }
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 5px 0;
+        }
 
-    button:hover {
-        background-color: #0056b3;
-    }
+        button:hover {
+            background-color: #0056b3;
+        }
 
-    button:disabled {
-        background-color: #ccc;
-        cursor: not-allowed;
-    }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
 
 
         #checkboxes {
@@ -84,8 +84,8 @@
             margin-right: 10px;
         }
 
-         /* General table styling */
-         table {
+        /* General table styling */
+        table {
             text-align: center;
             width: 100%;
             border-collapse: collapse;
@@ -196,226 +196,226 @@
         };
 
 
-       // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-document.addEventListener("DOMContentLoaded", function () {
-    const addDataButton = document.getElementById("addDataButton");
-    const formContainer = document.getElementById("formContainer");
-    const gradeForm = document.getElementById("gradeForm");
-    const checkboxes = document.getElementById("checkboxes");
-    const saveButton = document.getElementById("saveButton");
-    const cancelButton = document.getElementById("cancelButton");
-    const dateDropdown = document.getElementById("dateDropdown");
-    const showDataButton = document.getElementById("showDataButton");
-    const cancelShowButton = document.getElementById("cancelShowButton");
-    const dataContainer = document.getElementById("dataContainer");
+        document.addEventListener("DOMContentLoaded", function () {
+            const addDataButton = document.getElementById("addDataButton");
+            const formContainer = document.getElementById("formContainer");
+            const gradeForm = document.getElementById("gradeForm");
+            const checkboxes = document.getElementById("checkboxes");
+            const saveButton = document.getElementById("saveButton");
+            const cancelButton = document.getElementById("cancelButton");
+            const dateDropdown = document.getElementById("dateDropdown");
+            const showDataButton = document.getElementById("showDataButton");
+            const cancelShowButton = document.getElementById("cancelShowButton");
+            const dataContainer = document.getElementById("dataContainer");
 
-    const grades = [
-        { kit: 'Mega Kit', components: { Power: 1, Lamp: 1, Buzzer: 1, 'Wire Tap': 2, Invert: 1, Dark: 1, 'Motor Driver': 2,  Distance: 2 } },
+            const grades = [
+                { kit: 'Mega Kit', components: { Power: 1, Lamp: 1, Buzzer: 1, 'Wire Tap': 2, Invert: 1, Dark: 1, 'Motor Driver': 2, Distance: 2 } },
 
-        { kit: 'AI Kit', components: { Power: 1, Lamp: 1, Buzzer: 1, 'Wire Tap': 2, Invert: 1, Dark: 1, 'Motor Driver': 2,  Distance: 2,  AI: 1, Servo: 1 } },
+                { kit: 'AI Kit', components: { Power: 1, Lamp: 1, Buzzer: 1, 'Wire Tap': 2, Invert: 1, Dark: 1, 'Motor Driver': 2, Distance: 2, AI: 1, Servo: 1 } },
 
-        { kit: 'Wi-FI Kit', components: { Power: 1, Lamp: 1, Buzzer: 1, 'Wire Tap': 2, Invert: 1, Dark: 1, 'Motor Driver': 2,  Distance: 2,  'Wifi Clip V2': 1, Servo: 1 } },
+                { kit: 'Wi-FI Kit', components: { Power: 1, Lamp: 1, Buzzer: 1, 'Wire Tap': 2, Invert: 1, Dark: 1, 'Motor Driver': 2, Distance: 2, 'Wifi Clip V2': 1, Servo: 1 } },
 
-        { kit: 'Lab Kit', components: { Power: 1, Lamp: 1, Buzzer: 1, 'Wire Tap': 2, Invert: 1, Dark: 1, 'Motor Driver': 2,  Distance: 2,  AI: 1, Button: 1, IR: 1 } },
-        
-        { kit: 'First Aid Kit', components: { Power: 4, Lamp: 4, Buzzer: 4, 'Wire Tap': 8, Invert: 4, Dark: 4, 'Motor Driver': 8,  Distance: 4,  AI: 1, Button: 4, IR: 4 } },
+                { kit: 'Lab Kit', components: { Power: 1, Lamp: 1, Buzzer: 1, 'Wire Tap': 2, Invert: 1, Dark: 1, 'Motor Driver': 2, Distance: 2, AI: 1, Button: 1, IR: 1 } },
 
-        { grade: 1, components: { Power: 1, Lamp: 1, Button: 1, 'Wire Tap': 2 } },
+                { kit: 'First Aid Kit', components: { Power: 4, Lamp: 4, Buzzer: 4, 'Wire Tap': 8, Invert: 4, Dark: 4, 'Motor Driver': 8, Distance: 4, AI: 1, Button: 4, IR: 4 } },
 
-        { grade: 2, components: { Power: 1, Lamp: 1, Buzzer: 1, Dark: 1, 'Wire Tap': 2 } },
+                { grade: 1, components: { Power: 1, Lamp: 1, Button: 1, 'Wire Tap': 2 } },
 
-        { grade: 3, components: { Power: 1, 'Motor Driver': 1, Button: 1, Lamp: 1, 'Wire Tap': 2 } },
+                { grade: 2, components: { Power: 1, Lamp: 1, Buzzer: 1, Dark: 1, 'Wire Tap': 2 } },
 
-        { grade: 4, components: { Power: 1, 'Motor Driver': 1, Button: 1, Dark: 1, Invert: 1 } },
+                { grade: 3, components: { Power: 1, 'Motor Driver': 1, Button: 1, Lamp: 1, 'Wire Tap': 2 } },
 
-        { grade: 5, components: { Power: 1, 'Motor Driver': 2, Distance: 1, IR: 1, Invert: 1 } },
+                { grade: 4, components: { Power: 1, 'Motor Driver': 1, Button: 1, Dark: 1, Invert: 1 } },
 
-        { grade: 6, components: { Power: 1, 'Motor Driver': 2, Distance: 1, IR: 1, Invert: 1, Button: 1 } },
+                { grade: 5, components: { Power: 1, 'Motor Driver': 2, Distance: 1, IR: 1, Invert: 1 } },
 
-        { grade: 7, components: { Power: 1, 'Motor Driver': 1, AI: 1, Buzzer: 1, Lamp: 1, 'Wire Tap': 2 } },
+                { grade: 6, components: { Power: 1, 'Motor Driver': 2, Distance: 1, IR: 1, Invert: 1, Button: 1 } },
 
-        { grade: 8, components: { Buzzer: 1, Dark: 1, Distance: 1, IR: 1, Lamp: 1 } },
+                { grade: 7, components: { Power: 1, 'Motor Driver': 1, AI: 1, Buzzer: 1, Lamp: 1, 'Wire Tap': 2 } },
 
-        { grade: 9, components: { Power: 1, 'Motor Driver': 2, Distance: 1, IR: 1 } },
+                { grade: 8, components: { Buzzer: 1, Dark: 1, Distance: 1, IR: 1, Lamp: 1 } },
 
-        { grade: 10, components: { Power: 1,  Lamp: 1, Buzzer: 1,  AI: 1 } }
-    ];
+                { grade: 9, components: { Power: 1, 'Motor Driver': 2, Distance: 1, IR: 1 } },
 
-    grades.forEach(grade => {
-        const container = document.createElement("div");
-        container.className = "checkbox-container";
+                { grade: 10, components: { Power: 1, Lamp: 1, Buzzer: 1, AI: 1 } }
+            ];
 
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.name = "grade";
-        checkbox.value = grade.grade || grade.kit;
-        checkbox.addEventListener("change", handleCheckboxChange);
+            grades.forEach(grade => {
+                const container = document.createElement("div");
+                container.className = "checkbox-container";
 
-        const label = document.createElement("label");
-        label.className = "checkbox-label";
-        label.textContent = grade.grade ? `Grade ${grade.grade}` : grade.kit;
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.name = "grade";
+                checkbox.value = grade.grade || grade.kit;
+                checkbox.addEventListener("change", handleCheckboxChange);
 
-        const input = document.createElement("input");
-        input.type = "number";
-        input.name = `quantity${grade.grade ? grade.grade : grade.kit.replace(/\s+/g, '')}`;
-        input.min = "1";
-        input.style.display = "none";
+                const label = document.createElement("label");
+                label.className = "checkbox-label";
+                label.textContent = grade.grade ? `Grade ${grade.grade}` : grade.kit;
 
-        container.appendChild(checkbox);
-        container.appendChild(label);
-        container.appendChild(input);
+                const input = document.createElement("input");
+                input.type = "number";
+                input.name = `quantity${grade.grade ? grade.grade : grade.kit.replace(/\s+/g, '')}`;
+                input.min = "1";
+                input.style.display = "none";
 
-        checkboxes.appendChild(container);
-        checkboxes.appendChild(document.createElement("br")); // Add a line break after each container
-    });
+                container.appendChild(checkbox);
+                container.appendChild(label);
+                container.appendChild(input);
 
-    addDataButton.addEventListener("click", function () {
-        formContainer.style.display = "block";
-        cancelButton.style.display = "inline-block";
-    });
-
-    cancelButton.addEventListener("click", function () {
-        formContainer.style.display = "none";
-        resetForm();
-    });
-
-    saveButton.addEventListener("click", async function () {
-        const selectedGrades = Array.from(document.querySelectorAll("input[name='grade']:checked"))
-            .map(checkbox => checkbox.value);
-
-        if (selectedGrades.length > 0) {
-            const gradeQuantities = selectedGrades.map(value => {
-                const grade = grades.find(g => g.grade === parseInt(value) || g.kit === value);
-                const inputName = `quantity${grade.grade ? grade.grade : grade.kit.replace(/\s+/g, '')}`;
-                const inputElement = document.querySelector(`input[name='${inputName}']`);
-                const inputQuantity = parseInt(inputElement.value);
-
-                if (isNaN(inputQuantity) || inputQuantity <= 0) {
-                    throw new Error(`Invalid quantity for ${grade.grade ? `Grade ${grade.grade}` : grade.kit}`);
-                }
-
-                const components = {};
-                for (const [component, quantity] of Object.entries(grade.components)) {
-                    components[component] = quantity * inputQuantity;
-                }
-
-                return {
-                    grade: grade.grade || null,
-                    kit: grade.kit || null,
-                    quantity: inputQuantity,
-                    components
-                };
+                checkboxes.appendChild(container);
+                checkboxes.appendChild(document.createElement("br")); // Add a line break after each container
             });
 
-            const data = {
-                grades: gradeQuantities,
-                aggregatedComponents: aggregateComponents(gradeQuantities), // Calculate aggregated components
-                date: new Date().toISOString()
-            };
+            addDataButton.addEventListener("click", function () {
+                formContainer.style.display = "block";
+                cancelButton.style.display = "inline-block";
+            });
 
-            try {
-                await addDoc(collection(db, "grades"), data);
-                alert("Data saved successfully!");
+            cancelButton.addEventListener("click", function () {
                 formContainer.style.display = "none";
                 resetForm();
-                loadSavedData();
-            } catch (error) {
-                console.error("Error saving data: ", error);
-                alert(`Error saving data: ${error.message}`);
-            }
-        } else {
-            alert("Please select a grade and enter quantities.");
-        }
-    });
-
-    function handleCheckboxChange(event) {
-        const checkbox = event.target;
-        const input = checkbox.nextElementSibling.nextElementSibling;
-        if (checkbox.checked) {
-            input.style.display = "inline-block";
-        } else {
-            input.style.display = "none";
-        }
-
-        const selectedGrades = document.querySelectorAll("input[name='grade']:checked");
-        if (selectedGrades.length > 0) {
-            saveButton.style.display = "inline-block";
-            cancelButton.style.display = "inline-block";
-        } else {
-            saveButton.style.display = "none";
-            cancelButton.style.display = "none";
-        }
-    }
-
-    function resetForm() {
-        document.querySelectorAll("input[name='grade']").forEach(checkbox => {
-            checkbox.checked = false;
-            checkbox.nextElementSibling.nextElementSibling.style.display = "none";
-        });
-    }
-
-    async function loadSavedData() {
-        try {
-            const querySnapshot = await getDocs(collection(db, "grades"));
-            dateDropdown.innerHTML = "";
-            querySnapshot.forEach(doc => {
-                const option = document.createElement("option");
-                option.value = doc.id;
-                option.textContent = new Date(doc.data().date).toLocaleString();
-                dateDropdown.appendChild(option);
             });
-        } catch (error) {
-            console.error("Error loading data: ", error);
-        }
-    }
 
-    function aggregateComponents(gradeQuantities) {
-        const aggregatedComponents = {};
+            saveButton.addEventListener("click", async function () {
+                const selectedGrades = Array.from(document.querySelectorAll("input[name='grade']:checked"))
+                    .map(checkbox => checkbox.value);
 
-        // Aggregate quantities
-        gradeQuantities.forEach(gq => {
-            for (const [component, quantity] of Object.entries(gq.components)) {
-                if (!aggregatedComponents[component]) {
-                    aggregatedComponents[component] = 0;
+                if (selectedGrades.length > 0) {
+                    const gradeQuantities = selectedGrades.map(value => {
+                        const grade = grades.find(g => g.grade === parseInt(value) || g.kit === value);
+                        const inputName = `quantity${grade.grade ? grade.grade : grade.kit.replace(/\s+/g, '')}`;
+                        const inputElement = document.querySelector(`input[name='${inputName}']`);
+                        const inputQuantity = parseInt(inputElement.value);
+
+                        if (isNaN(inputQuantity) || inputQuantity <= 0) {
+                            throw new Error(`Invalid quantity for ${grade.grade ? `Grade ${grade.grade}` : grade.kit}`);
+                        }
+
+                        const components = {};
+                        for (const [component, quantity] of Object.entries(grade.components)) {
+                            components[component] = quantity * inputQuantity;
+                        }
+
+                        return {
+                            grade: grade.grade || null,
+                            kit: grade.kit || null,
+                            quantity: inputQuantity,
+                            components
+                        };
+                    });
+
+                    const data = {
+                        grades: gradeQuantities,
+                        aggregatedComponents: aggregateComponents(gradeQuantities), // Calculate aggregated components
+                        date: new Date().toISOString()
+                    };
+
+                    try {
+                        await addDoc(collection(db, "grades"), data);
+                        alert("Data saved successfully!");
+                        formContainer.style.display = "none";
+                        resetForm();
+                        loadSavedData();
+                    } catch (error) {
+                        console.error("Error saving data: ", error);
+                        alert(`Error saving data: ${error.message}`);
+                    }
+                } else {
+                    alert("Please select a grade and enter quantities.");
                 }
-                aggregatedComponents[component] += quantity;
+            });
+
+            function handleCheckboxChange(event) {
+                const checkbox = event.target;
+                const input = checkbox.nextElementSibling.nextElementSibling;
+                if (checkbox.checked) {
+                    input.style.display = "inline-block";
+                } else {
+                    input.style.display = "none";
+                }
+
+                const selectedGrades = document.querySelectorAll("input[name='grade']:checked");
+                if (selectedGrades.length > 0) {
+                    saveButton.style.display = "inline-block";
+                    cancelButton.style.display = "inline-block";
+                } else {
+                    saveButton.style.display = "none";
+                    cancelButton.style.display = "none";
+                }
             }
-        });
 
-        return aggregatedComponents;
-    }
+            function resetForm() {
+                document.querySelectorAll("input[name='grade']").forEach(checkbox => {
+                    checkbox.checked = false;
+                    checkbox.nextElementSibling.nextElementSibling.style.display = "none";
+                });
+            }
 
-    dateDropdown.addEventListener("change", function () {
-        const selectedDateId = dateDropdown.value;
-        if (selectedDateId) {
-            showDataButton.style.display = "inline-block";
-            cancelShowButton.style.display = "inline-block";
-        } else {
-            showDataButton.style.display = "none";
-            cancelShowButton.style.display = "none";
-        }
-    });
+            async function loadSavedData() {
+                try {
+                    const querySnapshot = await getDocs(collection(db, "grades"));
+                    dateDropdown.innerHTML = "";
+                    querySnapshot.forEach(doc => {
+                        const option = document.createElement("option");
+                        option.value = doc.id;
+                        option.textContent = new Date(doc.data().date).toLocaleString();
+                        dateDropdown.appendChild(option);
+                    });
+                } catch (error) {
+                    console.error("Error loading data: ", error);
+                }
+            }
 
-    cancelShowButton.addEventListener("click", function () {
-        dataContainer.innerHTML = ""; // Clear data container
-        showDataButton.style.display = "none";
-        cancelShowButton.style.display = "none";
-    });
+            function aggregateComponents(gradeQuantities) {
+                const aggregatedComponents = {};
 
-    showDataButton.addEventListener("click", async function () {
-    const selectedDateId = dateDropdown.value;
-    if (selectedDateId) {
-        try {
-            const docRef = doc(db, "grades", selectedDateId);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                
-                // Table for Grades and Kits
-                let gradesTable = `
+                // Aggregate quantities
+                gradeQuantities.forEach(gq => {
+                    for (const [component, quantity] of Object.entries(gq.components)) {
+                        if (!aggregatedComponents[component]) {
+                            aggregatedComponents[component] = 0;
+                        }
+                        aggregatedComponents[component] += quantity;
+                    }
+                });
+
+                return aggregatedComponents;
+            }
+
+            dateDropdown.addEventListener("change", function () {
+                const selectedDateId = dateDropdown.value;
+                if (selectedDateId) {
+                    showDataButton.style.display = "inline-block";
+                    cancelShowButton.style.display = "inline-block";
+                } else {
+                    showDataButton.style.display = "none";
+                    cancelShowButton.style.display = "none";
+                }
+            });
+
+            cancelShowButton.addEventListener("click", function () {
+                dataContainer.innerHTML = ""; // Clear data container
+                showDataButton.style.display = "none";
+                cancelShowButton.style.display = "none";
+            });
+
+            showDataButton.addEventListener("click", async function () {
+                const selectedDateId = dateDropdown.value;
+                if (selectedDateId) {
+                    try {
+                        const docRef = doc(db, "grades", selectedDateId);
+                        const docSnap = await getDoc(docRef);
+                        if (docSnap.exists()) {
+                            const data = docSnap.data();
+
+                            // Table for Grades and Kits
+                            let gradesTable = `
                     <table border="1">
                         <thead>
                             <tr>
@@ -436,8 +436,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     </table>
                 `;
 
-                // Table for Components
-                let componentsTable = `
+                            // Table for Components
+                            let componentsTable = `
                     <table border="1">
                         <thead>
                             <tr>
@@ -458,8 +458,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     </table>
                 `;
 
-                // Table for Aggregated Components
-                let aggregatedTable = `
+                            // Table for Aggregated Components
+                            let aggregatedTable = `
                     <table border="1">
                         <thead>
                             <tr>
@@ -478,7 +478,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     </table>
                 `;
 
-                dataContainer.innerHTML = `
+                            dataContainer.innerHTML = `
                     <p>Grades and Kits:</p>
                     ${gradesTable}
                     
@@ -488,19 +488,19 @@ document.addEventListener("DOMContentLoaded", function () {
                     <p>Aggregated Component Quantities:</p>
                     ${aggregatedTable}
                 `;
-            } else {
-                dataContainer.innerHTML = "No data found.";
-            }
-        } catch (error) {
-            console.error("Error getting document: ", error);
-        }
-    }
-});
+                        } else {
+                            dataContainer.innerHTML = "No data found.";
+                        }
+                    } catch (error) {
+                        console.error("Error getting document: ", error);
+                    }
+                }
+            });
 
-    loadSavedData();
-});
+            loadSavedData();
+        });
 
-  </script>
+    </script>
 </body>
 
 </html>
