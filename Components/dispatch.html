@@ -213,19 +213,35 @@ document.addEventListener("DOMContentLoaded", function () {
     const dataContainer = document.getElementById("dataContainer");
 
     const grades = [
-        { kit: 'Mega Kit', components: { Power: 1, Lamp: 1, Button: 1, 'Wire Tap': 1 } },
-        { kit: 'AI Kit', components: { Power: 1, Lamp: 1, Button: 1, 'Wire Tap': 1 } },
-        { kit: 'Wi-FI Kit', components: { Power: 1, Lamp: 1, Button: 1, 'Wire Tap': 1 } },
-        { grade: 1, components: { Power: 1, Lamp: 1, Button: 1, 'Wire Tap': 1 } },
-        { grade: 2, components: { Power: 1, Lamp: 1, Buzzer: 1, Dark: 1, 'Wire Tap': 1 } },
-        { grade: 3, components: { Power: 1, 'Motor Driver': 1, Button: 1, Lamp: 1, 'Wire Tap': 1 } },
+        { kit: 'Mega Kit', components: { Power: 1, Lamp: 1, Buzzer: 1, 'Wire Tap': 2, Invert: 1, Dark: 1, 'Motor Driver': 2,  Distance: 2 } },
+
+        { kit: 'AI Kit', components: { Power: 1, Lamp: 1, Buzzer: 1, 'Wire Tap': 2, Invert: 1, Dark: 1, 'Motor Driver': 2,  Distance: 2,  AI: 1, Servo: 1 } },
+
+        { kit: 'Wi-FI Kit', components: { Power: 1, Lamp: 1, Buzzer: 1, 'Wire Tap': 2, Invert: 1, Dark: 1, 'Motor Driver': 2,  Distance: 2,  'Wifi Clip V2': 1, Servo: 1 } },
+
+        { kit: 'Lab Kit', components: { Power: 1, Lamp: 1, Buzzer: 1, 'Wire Tap': 2, Invert: 1, Dark: 1, 'Motor Driver': 2,  Distance: 2,  AI: 1, Button: 1, IR: 1 } },
+        
+        { kit: 'First Aid Kit', components: { Power: 4, Lamp: 4, Buzzer: 4, 'Wire Tap': 8, Invert: 4, Dark: 4, 'Motor Driver': 8,  Distance: 4,  AI: 1, Button: 4, IR: 4 } },
+
+        { grade: 1, components: { Power: 1, Lamp: 1, Button: 1, 'Wire Tap': 2 } },
+
+        { grade: 2, components: { Power: 1, Lamp: 1, Buzzer: 1, Dark: 1, 'Wire Tap': 2 } },
+
+        { grade: 3, components: { Power: 1, 'Motor Driver': 1, Button: 1, Lamp: 1, 'Wire Tap': 2 } },
+
         { grade: 4, components: { Power: 1, 'Motor Driver': 1, Button: 1, Dark: 1, Invert: 1 } },
-        { grade: 5, components: { Power: 1, 'Motor Driver': 1, Distance: 1, IR: 1, Invert: 1 } },
-        { grade: 6, components: { Power: 1, 'Motor Driver': 1, Distance: 1, IR: 1, Invert: 1, Button: 1 } },
-        { grade: 7, components: { Power: 1, 'Motor Driver': 1, AI: 1, Buzzer: 1, Lamp: 1, 'Wire Tap': 1 } },
+
+        { grade: 5, components: { Power: 1, 'Motor Driver': 2, Distance: 1, IR: 1, Invert: 1 } },
+
+        { grade: 6, components: { Power: 1, 'Motor Driver': 2, Distance: 1, IR: 1, Invert: 1, Button: 1 } },
+
+        { grade: 7, components: { Power: 1, 'Motor Driver': 1, AI: 1, Buzzer: 1, Lamp: 1, 'Wire Tap': 2 } },
+
         { grade: 8, components: { Buzzer: 1, Dark: 1, Distance: 1, IR: 1, Lamp: 1 } },
-        { grade: 9, components: { Power: 1, 'Motor Driver': 1, Button: 1, Lamp: 1, 'Wire Tap': 1 } },
-        { grade: 10, components: { Power: 10, Dark: 10, IR: 10, Motor: 10 } }
+
+        { grade: 9, components: { Power: 1, 'Motor Driver': 2, Distance: 1, IR: 1 } },
+
+        { grade: 10, components: { Power: 1,  Lamp: 1, Buzzer: 1,  AI: 1 } }
     ];
 
     grades.forEach(grade => {
