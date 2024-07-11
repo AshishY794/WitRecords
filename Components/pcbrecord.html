@@ -286,37 +286,37 @@
     }
 
 
-// Function to save data to Firestore
-async function saveData() {
-  try {
-    if (!selectedDate) {
-      alert("Please select a date.");
-      return;
+    // Function to save data to Firestore
+    async function saveData() {
+      try {
+        if (!selectedDate) {
+          alert("Please select a date.");
+          return;
+        }
+
+        // Check if the date already exists in the database
+        const docRef = doc(db, `sheetData/${selectedDate}`);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          alert("The selected date already exists in the database. Please choose a different date.");
+          return;
+        }
+
+        const data = hot.getData(); // Get all data from Handsontable instance
+        const flattenedData = flattenData(data); // Flatten the nested array data
+        const notes = document.getElementById('notes').value; // Get notes
+
+        // Save data and notes to Firestore document
+        await setDoc(docRef, { data: flattenedData, notes: notes });
+
+        alert("Data and notes saved to Firestore under " + selectedDate); // Show a message to the user
+        resetForm(); // Reset the form after saving
+      } catch (error) {
+        console.error("Error adding document: ", error);
+        alert("Failed to save data to Firestore. Please try again.");
+      }
     }
-
-    // Check if the date already exists in the database
-    const docRef = doc(db, `sheetData/${selectedDate}`);
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      alert("The selected date already exists in the database. Please choose a different date.");
-      return;
-    }
-
-    const data = hot.getData(); // Get all data from Handsontable instance
-    const flattenedData = flattenData(data); // Flatten the nested array data
-    const notes = document.getElementById('notes').value; // Get notes
-
-    // Save data and notes to Firestore document
-    await setDoc(docRef, { data: flattenedData, notes: notes });
-
-    alert("Data and notes saved to Firestore under " + selectedDate); // Show a message to the user
-    resetForm(); // Reset the form after saving
-  } catch (error) {
-    console.error("Error adding document: ", error);
-    alert("Failed to save data to Firestore. Please try again.");
-  }
-}
 
     // Event listener for Add Data button click
     document.getElementById('openSpreadsheetBtn').onclick = function () {
@@ -488,10 +488,13 @@ async function saveData() {
 
     let hotInstance; // Handsontable instance for main data
     let blixPcbsInstance; // Handsontable instance for Blix PCBs
+    let noStockInstance; // Declare noStockInstance
+
 
     async function initializeSpreadsheet() {
       const container = document.getElementById('spreadsheetWrapper');
       const blixContainer = document.getElementById('blixPcbsWrapper');
+      const noStockContainer = document.getElementById('spreadsheetWrapperNoStock'); // Container for no stock
 
       // Destroy any existing Handsontable instances if they exist
       if (hotInstance) {
@@ -500,10 +503,14 @@ async function saveData() {
       if (blixPcbsInstance) {
         blixPcbsInstance.destroy();
       }
+      // if (noStockInstance) { // Destroy no stock instance if exists
+      //   noStockInstance.destroy();
+      // }
 
       // Fetch data from Firestore
       let allData = [];
       let blixData = [];
+      let noStockData = []; // Array to hold blox names with zero reminder
 
       try {
         // Fetch data from 'sheetData' collection
@@ -527,7 +534,8 @@ async function saveData() {
           reminder: bloxData[bloxName]
         }));
 
-        // Filter out data where reminder is 0
+        // Filter out data where reminder is 0 and add to noStockData
+        noStockData = allData.filter(item => item.reminder === 0);
         allData = allData.filter(item => item.reminder !== 0);
 
         // Define the preferred order of blox names
@@ -583,6 +591,12 @@ async function saveData() {
           }
         });
 
+        // Update noStockData after adjustments
+        noStockData = noStockData.concat(allData.filter(item => item.reminder === 0));
+        allData = allData.filter(item => item.reminder !== 0);
+        noStockData = noStockData.concat(blixData.filter(item => item.reminder === 0));
+        blixData = blixData.filter(item => item.reminder !== 0);
+
       } catch (error) {
         console.error("Error getting documents: ", error);
       }
@@ -627,6 +641,9 @@ async function saveData() {
       container.style.display = 'block'; // Display the main spreadsheet container
       blixContainer.style.display = 'block'; // Display the Blix PCBs spreadsheet container
 
+      // Initialize the no stock Handsontable
+      initializeNoStockSpreadsheet(noStockData);
+
       // Initialize other parts of your application as needed
 
       // Call fetchMainData to log 'dipakmaindata'
@@ -669,57 +686,14 @@ async function saveData() {
     async function initializeNoStockSpreadsheet(bloxNamesWithZeroReminder = []) {
       const container = document.getElementById('spreadsheetWrapperNoStock');
 
-      // Fetch all blox names and their reminder values from Firestore
-      let allBloxData = {};
-      try {
-        const querySnapshot = await getDocs(collection(db, 'sheetData'));
-        querySnapshot.forEach((doc) => {
-          const data = doc.data().data;
-          data.forEach(row => {
-            if (row.bloxName) {
-              if (!allBloxData[row.bloxName]) {
-                allBloxData[row.bloxName] = 0;
-              }
-              if (row.reminder != null) {
-                allBloxData[row.bloxName] += row.reminder;
-              } else {
-                allBloxData[row.bloxName] += row.input;
-              }
-            }
-          });
-        });
-      } catch (error) {
-        console.error("Error getting documents: ", error);
-        alert("Failed to retrieve PCB records from Firestore.");
-        return;
-      }
-
-      // Define the list of blox names you want to check
-      const bloxNamesToCheck = [
-        'Power', 'Lamp', 'Buzzer', 'Invert', 'Dark', 'Distance', 'IR', 'Motor Driver',
-        'Wire Tap', 'Button', 'AI', 'Wifi Clip V1', 'wifi Clip V2', 'Servo', 'Logic Gate',
-        'Toggle', 'Touch', 'Laser', 'Solar', 'Heat', 'New TX-RX', 'Old TX-RX', 'Magnet',
-        'Record And Repete', 'AI Chat', 'Clap', 'Tongee', 'Blix Power', 'Blix Led', 'Blix Buzzer', 'Blix Not', 'Blix Motor Driver', 'Blix Distance', 'Blix IR', 'Blix Switch'
-      ];
-
-      // Include blox names with zero reminders in the list to check
-      bloxNamesWithZeroReminder.forEach(bloxName => {
-        if (!bloxNamesToCheck.includes(bloxName)) {
-          bloxNamesToCheck.push(bloxName);
-        }
-      });
-
-      // Filter out blox names that are not in PCB records or have a reminder of 0
-      const bloxNamesNotInRecords = bloxNamesToCheck.filter(bloxName => !allBloxData[bloxName] || allBloxData[bloxName] === 0);
-
-      // Create the data array for Handsontable with blox names not in records or with a reminder of 0
-      const data = bloxNamesNotInRecords.map(bloxName => ({
-        bloxName: bloxName,
+      // Create the data array for Handsontable with blox names with a reminder of 0
+      const data = bloxNamesWithZeroReminder.map(bloxName => ({
+        bloxName: bloxName.bloxName,
         reminder: 0 // Set reminder to 0 for blox names not in records or with a reminder of 0
       }));
 
       // Create a new Handsontable instance with read-only configuration
-      const hotInstance = new Handsontable(container, {
+      noStockInstance = new Handsontable(container, {
         data: data,
         rowHeaders: true,
         colHeaders: ['Blox Name', 'We Have'],
@@ -745,6 +719,7 @@ async function saveData() {
       document.getElementById('csvDownloadBtn').addEventListener('click', convertToCSV);
     });
 
+    
     // Function to convert Handsontable data to CSV
     function convertToCSV() {
       const data = hotInstance.getData();
