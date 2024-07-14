@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,7 +30,8 @@
     }
 
     .content {
-      margin-top: 165px; /* Adjust this value to match the height of the header */
+      margin-top: 165px;
+      /* Adjust this value to match the height of the header */
       width: 80%;
       max-width: 600px;
     }
@@ -46,7 +48,8 @@
       position: relative;
       background-size: cover;
       background-position: center;
-      color: white; /* Adjust text color for better readability */
+      color: white;
+      /* Adjust text color for better readability */
     }
 
     .section:hover {
@@ -56,11 +59,13 @@
 
     .section h2 {
       margin-bottom: 10px;
-      color: white; /* Ensure the text is visible on the background image */
+      color: white;
+      /* Ensure the text is visible on the background image */
     }
 
     .section p {
-      color: white; /* Ensure the text is visible on the background image */
+      color: white;
+      /* Ensure the text is visible on the background image */
     }
 
     .section::after {
@@ -70,7 +75,8 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.5); /* Dark overlay for better text readability */
+      background: rgba(0, 0, 0, 0.5);
+      /* Dark overlay for better text readability */
       border-radius: 8px;
       z-index: 1;
     }
@@ -93,6 +99,7 @@
     }
   </style>
 </head>
+
 <body>
   <header>
     <img src="Components/Images/WitBlox Logo.png" alt="WitBlox Logo" class="logo">
@@ -101,7 +108,8 @@
 
   <div class="content">
     <!-- PCB Record Section -->
-    <div class="section" onclick="navigateTo('Components/pcbrecord.html')" style="background-image: url('Components/Images/power.png');">
+    <div class="section" onclick="navigateTo('Components/pcbrecord.html')"
+      style="background-image: url('Components/Images/power.png');">
       <div class="section-content">
         <h2>PCB Record</h2>
         <p>Click here to manage PCB records.</p>
@@ -109,7 +117,8 @@
     </div>
 
     <!-- Dipak Section -->
-    <div class="section" onclick="navigateTo('Components/dipaksirrecord.html')" style="background-image: url('Components/Images/record.png');">
+    <div class="section" onclick="navigateTo('Components/dipaksirrecord.html')"
+      style="background-image: url('Components/Images/record.png');">
       <div class="section-content">
         <h2>Dipak Sir Records</h2>
         <p>Click here to view or manage Dipak Sir PCB Records data.</p>
@@ -117,23 +126,58 @@
     </div>
 
     <!-- Shirkhe Section -->
-    <div class="section" onclick="navigateTo('Components/shirkhesirrecord.html')" style="background-image: url('Components/Images/hacker.jpg');">
+    <div class="section" onclick="navigateTo('Components/shirkhesirrecord.html')"
+      style="background-image: url('Components/Images/hacker.jpg');">
       <div class="section-content">
         <h2>Shirkhe Sir Records</h2>
         <p>Click here to view or manage Shirkhe Sir PCB Records data.</p>
       </div>
     </div>
 
+    <!-- Assembled PCB Record Section -->
+    <div class="section" onclick="navigateTo('Components/assembledpcbrec.html')"
+      style="background-image: url('Components/Images/assembledpcb.jpg');">
+      <div class="section-content">
+        <h2>Only SMD PCBs Record's</h2>
+        <p>Add SMD PCBs Record's Given To savita di.</p>
+      </div>
+    </div>
+
+
+    <!-- Savita Section -->
+    <div class="section" onclick="navigateTo('Components/savitadirec.html')"
+      style="background-image: url('Components/Images/Designer.png');">
+      <div class="section-content">
+        <h2>Savita Di Records</h2>
+        <p>Click here to view or manage Savita Di PCB Records data.</p>
+      </div>
+    </div>
+
+
+    <!-- Tested PCb Section -->
+    <div class="section" onclick="navigateTo('Components/testedpcbs.html')"
+      style="background-image: url('Components/Images/ssvi.png');">
+      <div class="section-content">
+        <h2>Tested PCB Records</h2>
+        <p>Click here to view or manage Tested PCB Records data.</p>
+      </div>
+    </div>
+
+
+
     <!-- Component Record Section -->
-    <div class="section" onclick="navigateTo('Components/componentsrecord.html')" style="background-image: url('Components/Images/registers.jpg');">
+    <div class="section" onclick="navigateTo('Components/componentsrecord.html')"
+      style="background-image: url('Components/Images/registers.jpg');">
       <div class="section-content">
         <h2>Component Record</h2>
         <p>Click here to manage component records.</p>
       </div>
     </div>
 
+
     <!-- BOM Record Section -->
-    <div class="section" onclick="navigateTo('Components/BOM.html')" style="background-image: url('Components/Images/pcbbom.avif');">
+    <div class="section" onclick="navigateTo('Components/BOM.html')"
+      style="background-image: url('Components/Images/pcbbom.avif');">
       <div class="section-content">
         <h2>All PCB BOM</h2>
         <p>Click here to view or manage All PCB BOM.</p>
@@ -141,23 +185,18 @@
     </div>
 
     <!-- Dispatch Record Section -->
-    <div class="section" onclick="navigateTo('Components/dispatch.html')" style="background-image: url('Components/Images/dispatch.jpg');">
+    <div class="section" onclick="navigateTo('Components/dispatch.html')"
+      style="background-image: url('Components/Images/dispatch.jpg');">
       <div class="section-content">
         <h2>Dispatch Record</h2>
         <p>Click here to Add Dispatch Data.</p>
       </div>
     </div>
 
-    <!-- Assembled PCB Record Section -->
-    <div class="section" onclick="navigateTo('Components/assembledpcbrec.html')" style="background-image: url('Components/Images/assembledpcb.jpg');">
-      <div class="section-content">
-        <h2>Assembled PCBs Record's</h2>
-        <p>Add Assembled PCBs Record's.</p>
-      </div>
-    </div>
 
     <!-- Summery Record Section -->
-    <div class="section" onclick="navigateTo('Components/summery.html')" style="background-image: url('Components/Images/summery.png');">
+    <div class="section" onclick="navigateTo('Components/summery.html')"
+      style="background-image: url('Components/Images/summery.png');">
       <div class="section-content">
         <h2>Summery</h2>
         <p>See All Data in 1 Place.</p>
@@ -173,4 +212,5 @@
     }
   </script>
 </body>
+
 </html>
