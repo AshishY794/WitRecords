@@ -154,7 +154,7 @@
 
 <body>
     <div id="app">
-        <h1>Dispatch Record</h1>
+        <h1>Blox Checker </h1>
         <button id="addDataButton">Add Data</button>
         <div id="formContainer" style="display: none;">
             <form id="gradeForm">
@@ -317,7 +317,7 @@
                     };
 
                     try {
-                        await addDoc(collection(db, "grades"), data);
+                        await addDoc(collection(db, "forDurga"), data);
                         alert("Data saved successfully!");
                         formContainer.style.display = "none";
                         resetForm();
@@ -359,7 +359,7 @@
 
             async function loadSavedData() {
                 try {
-                    const querySnapshot = await getDocs(collection(db, "grades"));
+                    const querySnapshot = await getDocs(collection(db, "forDurga"));
                     dateDropdown.innerHTML = "";
                     querySnapshot.forEach(doc => {
                         const option = document.createElement("option");
@@ -409,7 +409,7 @@
                 const selectedDateId = dateDropdown.value;
                 if (selectedDateId) {
                     try {
-                        const docRef = doc(db, "grades", selectedDateId);
+                        const docRef = doc(db, "forDurga", selectedDateId);
                         const docSnap = await getDoc(docRef);
                         if (docSnap.exists()) {
                             const data = docSnap.data();

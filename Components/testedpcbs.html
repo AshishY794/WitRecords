@@ -961,7 +961,7 @@ function initializeSecondSpreadsheet(data) {
     hotInstanceTT = new Handsontable(containerTT, {
         data: data.map(item => ({ bloxName: item.bloxName, Working: item.Working })),
         rowHeaders: true,
-        colHeaders: ['Blox Name', 'Working'],
+        colHeaders: ['Blox Name', 'We Have'],
         columns: [
             { data: 'bloxName' },
             { data: 'Working', type: 'numeric' }
