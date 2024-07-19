@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Dispatch Records</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -96,7 +96,7 @@
         th {
             background-color: #f2f2f2;
             padding: 10px;
-            text-align: left;
+            text-align: center;
             border: 1px solid #ddd;
         }
 
@@ -149,6 +149,19 @@
             border-color: #007bff;
             box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
         }
+
+        #noteContainer {
+            margin-top: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+        }
     </style>
 </head>
 
@@ -157,9 +170,13 @@
         <h1>Dispatch Record</h1>
         <button id="addDataButton">Add Data</button>
         <div id="formContainer" style="display: none;">
-            <form id="gradeForm">
+            <form id="pcbForm">
                 <div id="checkboxes">
                     <!-- Checkboxes will be dynamically added here -->
+                </div>
+                <div id="noteContainer">
+                    <label for="note">Note:</label>
+                    <textarea id="note" name="note" placeholder="Enter any additional notes here..."></textarea>
                 </div>
                 <button type="button" id="saveButton" style="display: none;">Save</button>
                 <button type="button" id="cancelButton" style="display: none;">Cancel</button>
@@ -179,8 +196,8 @@
             <!-- Data from Firestore will be displayed here -->
         </div>
         <a href="../index.html"><button id="homebutton">Home</button></a><br><br>
-
     </div>
+
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-app.js';
         import { getFirestore, collection, addDoc, getDocs, doc, getDoc } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-firestore.js';
@@ -195,7 +212,6 @@
             appId: "1:435215452631:web:75cd4ea4fb4d07b65be392"
         };
 
-
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -203,7 +219,7 @@
         document.addEventListener("DOMContentLoaded", function () {
             const addDataButton = document.getElementById("addDataButton");
             const formContainer = document.getElementById("formContainer");
-            const gradeForm = document.getElementById("gradeForm");
+            const pcbForm = document.getElementById("pcbForm");
             const checkboxes = document.getElementById("checkboxes");
             const saveButton = document.getElementById("saveButton");
             const cancelButton = document.getElementById("cancelButton");
@@ -211,56 +227,32 @@
             const showDataButton = document.getElementById("showDataButton");
             const cancelShowButton = document.getElementById("cancelShowButton");
             const dataContainer = document.getElementById("dataContainer");
+            const noteInput = document.getElementById("note");
 
-            const grades = [
-                { kit: 'Mega Kit', components: { Power: 1, Lamp: 1, Buzzer: 1, 'Wire Tap A': 2, Invert: 1, Dark: 1, 'Motor Driver': 2, Distance: 1, IR: 1 } },
-
-                { kit: 'AI Kit', components: { Power: 1, Lamp: 1, Buzzer: 1, 'Wire Tap A': 2, Invert: 1, Dark: 1, 'Motor Driver': 2, Distance: 2, IR: 1, AI: 1, Servo: 1 } },
-
-                { kit: 'Wi-FI Kit', components: { Power: 1, Lamp: 1, Buzzer: 1, 'Wire Tap A': 2, Invert: 1, Dark: 1, 'Motor Driver': 2, Distance: 2, IR: 1, 'Wifi Clip V2': 1, Servo: 1 } },
-
-                { kit: 'Lab Kit', components: { Power: 1, Lamp: 1, Buzzer: 1, 'Wire Tap A': 2, Invert: 1, Dark: 1, 'Motor Driver': 2, Distance: 2, AI: 1, Button: 1, IR: 1 } },
-
-                { kit: 'First Aid Kit', components: { Power: 4, Lamp: 4, Buzzer: 4, 'Wire Tap A': 8, Invert: 4, Dark: 4, 'Motor Driver': 8, Distance: 4, AI: 1, Button: 4, IR: 4 } },
-
-                { grade: 1, components: { Power: 1, Lamp: 1, Button: 1, 'Wire Tap': 2 } },
-
-                { grade: 2, components: { Power: 1, Lamp: 1, Buzzer: 1, Dark: 1, 'Wire Tap': 2 } },
-
-                { grade: 3, components: { Power: 1, 'Motor Driver': 1, Button: 1, Lamp: 1, 'Wire Tap': 2 } },
-
-                { grade: 4, components: { Power: 1, 'Motor Driver': 1, Button: 1, Dark: 1, Invert: 1 } },
-
-                { grade: 5, components: { Power: 1, 'Motor Driver': 2, Distance: 1, IR: 1, Invert: 1 } },
-
-                { grade: 6, components: { Power: 1, 'Motor Driver': 2, Distance: 1, IR: 1, Invert: 1, Button: 1 } },
-
-                { grade: 7, components: { Power: 1, 'Motor Driver': 1, AI: 1, Buzzer: 1, Lamp: 1, 'Wire Tap': 2 } },
-
-                { grade: 8, components: { Buzzer: 1, Dark: 1, Distance: 1, IR: 1, Lamp: 1 } },
-
-                { grade: 9, components: { Power: 1, 'Motor Driver': 2, Distance: 1, IR: 1 } },
-
-                { grade: 10, components: { Power: 1, Lamp: 1, Buzzer: 1, AI: 1 } }
+            const pcbs = [
+                "Power",'Power USB', "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR", "Motor Driver" , 'Motor Driver 2Pin', "Wire Tap",'Wire Tap A',
+                "Button", "AI", "Wifi Clip V1", "Wifi Clip V2", "Servo", "Logic Gate", "Toggle", "Touch",
+                "Laser", "Solar", "Heat", "New TX-RX", "Old TX-RX", "Magnet", "Record And Repeat",
+                "AI Chat", "Clap", "Tongee", 'Moisture'
             ];
 
-            grades.forEach(grade => {
+            pcbs.forEach(pcb => {
                 const container = document.createElement("div");
                 container.className = "checkbox-container";
 
                 const checkbox = document.createElement("input");
                 checkbox.type = "checkbox";
-                checkbox.name = "grade";
-                checkbox.value = grade.grade || grade.kit;
+                checkbox.name = "pcb";
+                checkbox.value = pcb;
                 checkbox.addEventListener("change", handleCheckboxChange);
 
                 const label = document.createElement("label");
                 label.className = "checkbox-label";
-                label.textContent = grade.grade ? `Grade ${grade.grade}` : grade.kit;
+                label.textContent = pcb;
 
                 const input = document.createElement("input");
                 input.type = "number";
-                input.name = `quantity${grade.grade ? grade.grade : grade.kit.replace(/\s+/g, '')}`;
+                input.name = `quantity${pcb.replace(/\s+/g, '')}`;
                 input.min = "1";
                 input.style.display = "none";
 
@@ -282,37 +274,30 @@
                 resetForm();
             });
 
+            // Save button event listener
             saveButton.addEventListener("click", async function () {
-                const selectedGrades = Array.from(document.querySelectorAll("input[name='grade']:checked"))
+                const selectedPCBs = Array.from(document.querySelectorAll("input[name='pcb']:checked"))
                     .map(checkbox => checkbox.value);
 
-                if (selectedGrades.length > 0) {
-                    const gradeQuantities = selectedGrades.map(value => {
-                        const grade = grades.find(g => g.grade === parseInt(value) || g.kit === value);
-                        const inputName = `quantity${grade.grade ? grade.grade : grade.kit.replace(/\s+/g, '')}`;
+                if (selectedPCBs.length > 0) {
+                    const pcbQuantities = selectedPCBs.map(value => {
+                        const inputName = `quantity${value.replace(/\s+/g, '')}`;
                         const inputElement = document.querySelector(`input[name='${inputName}']`);
                         const inputQuantity = parseInt(inputElement.value);
 
                         if (isNaN(inputQuantity) || inputQuantity <= 0) {
-                            throw new Error(`Invalid quantity for ${grade.grade ? `Grade ${grade.grade}` : grade.kit}`);
-                        }
-
-                        const components = {};
-                        for (const [component, quantity] of Object.entries(grade.components)) {
-                            components[component] = quantity * inputQuantity;
+                            throw new Error(`Invalid quantity for ${value}`);
                         }
 
                         return {
-                            grade: grade.grade || null,
-                            kit: grade.kit || null,
-                            quantity: inputQuantity,
-                            components
+                            pcb: value,
+                            quantity: inputQuantity
                         };
                     });
 
                     const data = {
-                        grades: gradeQuantities,
-                        aggregatedComponents: aggregateComponents(gradeQuantities), // Calculate aggregated components
+                        pcbs: pcbQuantities,
+                        note: noteInput.value,
                         date: new Date().toISOString()
                     };
 
@@ -327,7 +312,7 @@
                         alert(`Error saving data: ${error.message}`);
                     }
                 } else {
-                    alert("Please select a grade and enter quantities.");
+                    alert("Please select a PCB and enter quantities.");
                 }
             });
 
@@ -340,8 +325,8 @@
                     input.style.display = "none";
                 }
 
-                const selectedGrades = document.querySelectorAll("input[name='grade']:checked");
-                if (selectedGrades.length > 0) {
+                const selectedPCBs = document.querySelectorAll("input[name='pcb']:checked");
+                if (selectedPCBs.length > 0) {
                     saveButton.style.display = "inline-block";
                     cancelButton.style.display = "inline-block";
                 } else {
@@ -351,42 +336,53 @@
             }
 
             function resetForm() {
-                document.querySelectorAll("input[name='grade']").forEach(checkbox => {
+                document.querySelectorAll("input[name='pcb']").forEach(checkbox => {
                     checkbox.checked = false;
                     checkbox.nextElementSibling.nextElementSibling.style.display = "none";
                 });
+                noteInput.value = ""; // Clear the note input
             }
-
             async function loadSavedData() {
-                try {
-                    const querySnapshot = await getDocs(collection(db, "grades"));
-                    dateDropdown.innerHTML = "";
-                    querySnapshot.forEach(doc => {
-                        const option = document.createElement("option");
-                        option.value = doc.id;
-                        option.textContent = new Date(doc.data().date).toLocaleString();
-                        dateDropdown.appendChild(option);
-                    });
-                } catch (error) {
-                    console.error("Error loading data: ", error);
-                }
+    try {
+        // Fetch all documents from the "grades" collection
+        const querySnapshot = await getDocs(collection(db, "grades"));
+        
+        // Convert querySnapshot to an array of objects with id and date
+        const dataArray = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            date: new Date(doc.data().date),
+            text: new Date(doc.data().date).toLocaleString()
+        }));
+
+        // Sort the array by date in descending order
+        dataArray.sort((a, b) => b.date - a.date);
+        
+        // Clear the current options in the dropdown
+        dateDropdown.innerHTML = "";
+
+        // Create and append options to the dropdown
+        dataArray.forEach((item, index) => {
+            const option = document.createElement("option");
+            option.value = item.id;
+            option.textContent = item.text;
+
+            // Highlight the newest entry
+            if (index === 0) {
+                option.style.backgroundColor = "#dff0d8"; // Light green background
+                option.style.fontWeight = "bold";
             }
 
-            function aggregateComponents(gradeQuantities) {
-                const aggregatedComponents = {};
+            dateDropdown.appendChild(option);
+        });
 
-                // Aggregate quantities
-                gradeQuantities.forEach(gq => {
-                    for (const [component, quantity] of Object.entries(gq.components)) {
-                        if (!aggregatedComponents[component]) {
-                            aggregatedComponents[component] = 0;
-                        }
-                        aggregatedComponents[component] += quantity;
-                    }
-                });
-
-                return aggregatedComponents;
-            }
+        // Optionally, set the newest entry as selected
+        if (dataArray.length > 0) {
+            dateDropdown.selectedIndex = 0;
+        }
+    } catch (error) {
+        console.error("Error loading data: ", error);
+    }
+}
 
             dateDropdown.addEventListener("change", function () {
                 const selectedDateId = dateDropdown.value;
@@ -405,6 +401,7 @@
                 cancelShowButton.style.display = "none";
             });
 
+          
             showDataButton.addEventListener("click", async function () {
                 const selectedDateId = dateDropdown.value;
                 if (selectedDateId) {
@@ -414,80 +411,32 @@
                         if (docSnap.exists()) {
                             const data = docSnap.data();
 
-                            // Table for Grades and Kits
-                            let gradesTable = `
-                    <table border="1">
-                        <thead>
-                            <tr>
-                                <th>Grade/Kit</th>
-                                <th>Quantity</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${data.grades.map(gq => `
-                                <tr>
-                                    <td>${gq.grade ? `Grade ${gq.grade}` : gq.kit}</td>
-                                    <td>${gq.quantity}</td>
-                                    <td>${new Date(data.date).toLocaleString()}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                `;
-
-                            // Table for Components
-                            let componentsTable = `
-                    <table border="1">
-                        <thead>
-                            <tr>
-                                <th>Grade</th>
-                                <th>Component</th>
-                                <th>Quantity</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${data.grades.map(gq => gq.components ? Object.entries(gq.components).map(([component, quantity]) => `
-                                <tr>
-                                    <td>${gq.grade ? `Grade ${gq.grade}` : gq.kit}</td>
-                                    <td>${component}</td>
-                                    <td>${quantity}</td>
-                                </tr>
-                            `).join('') : '').join('')}
-                        </tbody>
-                    </table>
-                `;
-
-                            // Table for Aggregated Components
-                            let aggregatedTable = `
-                    <table border="1">
-                        <thead>
-                            <tr>
-                                <th>Component</th>
-                                <th>Total Quantity</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${Object.entries(data.aggregatedComponents).map(([component, totalQuantity]) => `
-                                <tr>
-                                    <td>${component}</td>
-                                    <td>${totalQuantity}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                `;
+                            // Table for PCBs
+                            
+                            let pcbsTable = `
+                            <p><strong>Note:</strong> ${data.note}</p>
+                                <table border="1">
+                                    <thead>
+                                        <tr>
+                                            <th>PCB</th>
+                                            <th>Quantity</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${data.pcbs.map(pcb => `
+                                            <tr>
+                                                <td>${pcb.pcb}</td>
+                                                <td>${pcb.quantity}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            `;
 
                             dataContainer.innerHTML = `
-                    <p>Grades and Kits:</p>
-                    ${gradesTable}
-                    
-                    <p>Components:</p>
-                    ${componentsTable}
-                    
-                    <p>Aggregated Component Quantities:</p>
-                    ${aggregatedTable}
-                `;
+                                <p>PCBs:</p>
+                                ${pcbsTable}
+                            `;
                         } else {
                             dataContainer.innerHTML = "No data found.";
                         }
@@ -497,9 +446,9 @@
                 }
             });
 
+            // Load saved data when the page loads
             loadSavedData();
         });
-
     </script>
 </body>
 

@@ -180,7 +180,7 @@
         'Power', 'Lamp', 'Buzzer', 'Invert', 'Dark', 'Distance', 'IR', 'Motor Driver',
         'Wire Tap', 'Button', 'AI', 'Wifi Clip V1', 'wifi Clip V2', 'Servo', 'Logic Gate',
         'Toggle', 'Touch', 'Laser', 'Solar', 'Heat', 'New TX-RX', 'Old TX-RX', 'Magnet',
-        'Record And Repete', 'AI Chat', 'Clap', 'Tongee'
+        'Record And Repete', 'AI Chat', 'Clap', 'Tongee', 'Moisture'
       ];
 
       const blixPcbs = {
@@ -305,10 +305,10 @@
         const docRef = doc(db, `sheetData/${selectedDate}`);
         const docSnap = await getDoc(docRef);
 
-        if (docSnap.exists()) {
-          alert("The selected date already exists in the database. Please choose a different date.");
-          return;
-        }
+        // if (docSnap.exists()) {
+        //   alert("The selected date already exists in the database. Please choose a different date.");
+        //   return;
+        // }
 
         const data = hot.getData(); // Get all data from Handsontable instance
         const flattenedData = flattenData(data); // Flatten the nested array data

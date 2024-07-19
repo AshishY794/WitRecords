@@ -172,10 +172,10 @@
 
             // Replace this with your actual blox names data source
             const bloxNames = [
-                'Power', 'Lamp', 'Buzzer', 'Invert', 'Dark', 'Distance', 'IR', 'Motor Driver',
-                'Wire Tap', 'Button', 'AI', 'Wifi Clip V1', 'wifi Clip V2', 'Servo', 'Logic Gate',
+                'Power','Power USB', 'Lamp', 'Buzzer', 'Invert', 'Dark', 'Distance', 'IR', 'Motor Driver' , 'Motor Driver 2Pin',
+                'Wire Tap','Wire Tap A', 'Button', 'AI', 'Wifi Clip V1', 'wifi Clip V2', 'Servo', 'Logic Gate',
                 'Toggle', 'Touch', 'Laser', 'Solar', 'Heat', 'New TX-RX', 'Old TX-RX', 'Magnet',
-                'Record And Repete', 'AI Chat', 'Clap', 'Tongee'
+                'Record And Repete', 'AI Chat', 'Clap', 'Tongee', 'Moisture'
             ];
 
             const blixPcbs = {
@@ -498,13 +498,35 @@ async function initializeSpreadsheet() {
     let assembledData = await fetchDataFromFirestore('assembledpcbadd');
     let givenOfficeData = await fetchDataFromFirestore('savitadigivenpcb');
 
-    // Subtract 'savitadigivenpcb' data from 'assembledpcbadd' data
-    givenOfficeData.forEach(givenItem => {
-        let matchingIndex = assembledData.findIndex(item => item.bloxName === givenItem.bloxName);
-        if (matchingIndex !== -1) {
-            assembledData[matchingIndex].reminder -= givenItem.reminder;
-            if (assembledData[matchingIndex].reminder < 0) {
-                assembledData[matchingIndex].reminder = 0;
+    // Combine 'Wire Tap' and 'Wire Tap A' quantities from givenOfficeData
+    const wireTapQuantities = givenOfficeData
+        .filter(item => item.bloxName === 'Wire Tap' || item.bloxName === 'Wire Tap A')
+        .reduce((total, item) => total + item.reminder, 0);
+
+    // Combine 'Motor Driver' and 'Motor Driver 2Pin' quantities from givenOfficeData
+    const motorDriverQuantities = givenOfficeData
+        .filter(item => item.bloxName === 'Motor Driver' || item.bloxName === 'Motor Driver 2Pin')
+        .reduce((total, item) => total + item.reminder, 0);
+
+    // Subtract combined quantities from 'assembledpcbadd' data
+    assembledData.forEach(assembledItem => {
+        if (assembledItem.bloxName === 'Wire Tap') {
+            assembledItem.reminder -= wireTapQuantities;
+            if (assembledItem.reminder < 0) {
+                assembledItem.reminder = 0;
+            }
+        } else if (assembledItem.bloxName === 'Motor Driver') {
+            assembledItem.reminder -= motorDriverQuantities;
+            if (assembledItem.reminder < 0) {
+                assembledItem.reminder = 0;
+            }
+        } else {
+            let matchingItem = givenOfficeData.find(item => item.bloxName === assembledItem.bloxName);
+            if (matchingItem) {
+                assembledItem.reminder -= matchingItem.reminder;
+                if (assembledItem.reminder < 0) {
+                    assembledItem.reminder = 0;
+                }
             }
         }
     });
@@ -517,8 +539,8 @@ async function initializeSpreadsheet() {
 
     // Define the preferred order of blox names
     const preferredOrder = [
-        "Power", "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR",
-        "Motor Driver", "Wire Tap", "Button", "AI", "Wifi Clip V1", "wifi Clip V2", "Servo", "Logic Gate"
+        "Power", 'Power USB', "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR",
+        "Motor Driver", 'Motor Driver 2Pin', "Wire Tap", 'Wire Tap A', "Button", "AI", "Wifi Clip V1", "wifi Clip V2", "Servo", "Logic Gate"
     ];
 
     // Sort allData to place preferred blox names first, then alphabetical
@@ -643,8 +665,8 @@ initializeSpreadsheet();
 
                 // Define the preferred order of blox names
                 const preferredOrder = [
-                    "Power", "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR",
-                    "Motor Driver", "Wire Tap", "Button", "AI", "Wifi Clip V1", "wifi Clip V2", "Servo", "Logic Gate"
+                    "Power",'Power USB', "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR",
+                    "Motor Driver" , 'Motor Driver 2Pin', "Wire Tap", 'Wire Tap A', "Button", "AI", "Wifi Clip V1", "wifi Clip V2", "Servo", "Logic Gate"
                 ];
 
                 // Sort allData to place preferred blox names first, then alphabetical

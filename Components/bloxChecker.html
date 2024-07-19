@@ -356,17 +356,41 @@
                     checkbox.nextElementSibling.nextElementSibling.style.display = "none";
                 });
             }
-
             async function loadSavedData() {
                 try {
                     const querySnapshot = await getDocs(collection(db, "forDurga"));
+
+                    // Convert querySnapshot to an array and sort by date
+                    const dataArray = querySnapshot.docs.map(doc => ({
+                        id: doc.id,
+                        date: new Date(doc.data().date),
+                        data: doc.data()
+                    }));
+
+                    // Sort dataArray in descending order of date
+                    dataArray.sort((a, b) => b.date - a.date);
+
                     dateDropdown.innerHTML = "";
-                    querySnapshot.forEach(doc => {
+
+                    // Create options and highlight the newest one
+                    dataArray.forEach((item, index) => {
                         const option = document.createElement("option");
-                        option.value = doc.id;
-                        option.textContent = new Date(doc.data().date).toLocaleString();
+                        option.value = item.id;
+                        option.textContent = item.date.toLocaleString();
+
+                        if (index === 0) {
+                            // Highlight the newest option
+                            option.style.backgroundColor = "#dff0d8"; // Light green background
+                            option.style.fontWeight = "bold";
+                        }
+
                         dateDropdown.appendChild(option);
                     });
+
+                    // Set the first option as selected
+                    if (dataArray.length > 0) {
+                        dateDropdown.selectedIndex = 0;
+                    }
                 } catch (error) {
                     console.error("Error loading data: ", error);
                 }

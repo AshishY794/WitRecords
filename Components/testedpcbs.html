@@ -18,6 +18,7 @@
         #graphContainer h3 {
             margin-bottom: 10px;
         }
+
         #circleGraph {
             width: 100%;
             height: auto;
@@ -47,8 +48,8 @@
     <!-- Container for buttons -->
 
     <h2>Available Tested PCBs For Dispatch In Office</h2>
-    <div id="spreadsheetWrapperTestedtt"  class="spreadsheet-wrapper"></div>
-<br>
+    <div id="spreadsheetWrapperTestedtt" class="spreadsheet-wrapper"></div>
+    <br>
 
     <!-- Container for the spreadsheet -->
     <h2>Available Tested PCBs Data</h2>
@@ -120,19 +121,19 @@
     <h2>
         See Graph Of Working And Not working pcb
     </h2>
-<center>
-    <div id="dropdownContainer">
-        <select id="pcbDropdown">
-            <option value="">Select a PCB</option>
-        </select>
-    </div>
-    <div id="graphContainer">
-        <h3 id="pcbHeading"></h3>
-        <canvas id="circleGraph"></canvas>
-    </div>
-</center>
+    <center>
+        <div id="dropdownContainer">
+            <select id="pcbDropdown">
+                <option value="">Select a PCB</option>
+            </select>
+        </div>
+        <div id="graphContainer">
+            <h3 id="pcbHeading"></h3>
+            <canvas id="circleGraph"></canvas>
+        </div>
+    </center>
     <!-- <div id="spreadsheetWrapperTested"></div> -->
-<br><br><br>
+    <br><br><br>
 
     <a href="../index.html"><button id="homebutton">Home</button></a><br><br>
 
@@ -227,10 +228,10 @@
 
             // Replace this with your actual blox names data source
             const bloxNames = [
-                'Power', 'Lamp', 'Buzzer', 'Invert', 'Dark', 'Distance', 'IR', 'Motor Driver',
-                'Wire Tap', 'Button', 'AI', 'Wifi Clip V1', 'Wifi Clip V2', 'Servo', 'Logic Gate',
+                'Power','Power USB', 'Lamp', 'Buzzer', 'Invert', 'Dark', 'Distance', 'IR', 'Motor Driver' , 'Motor Driver 2Pin',
+                'Wire Tap','Wire Tap A', 'Button', 'AI', 'Wifi Clip V1', 'Wifi Clip V2', 'Servo', 'Logic Gate',
                 'Toggle', 'Touch', 'Laser', 'Solar', 'Heat', 'New TX-RX', 'Old TX-RX', 'Magnet',
-                'Record And Repeat', 'AI Chat', 'Clap', 'Tongee'
+                'Record And Repeat', 'AI Chat', 'Clap', 'Tongee', 'Moisture'
             ];
 
             const blixPcbs = {
@@ -748,8 +749,8 @@
 
                 // Define the preferred order of blox names
                 const preferredOrder = [
-                    "Power", "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR",
-                    "Motor Driver", "Wire Tap", "Button", "AI", "Wifi Clip V1", "wifi Clip V2", "Servo", "Logic Gate"
+                    "Power",'Power USB', "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR",
+                    "Motor Driver" , 'Motor Driver 2Pin', "Wire Tap", 'Wire Tap A', "Button", "AI", "Wifi Clip V1", "wifi Clip V2", "Servo", "Logic Gate"
                 ];
 
                 // Sort allDataTT to place preferred blox names first, then alphabetical
@@ -798,7 +799,7 @@
 
 
 
-let hotInstanceT;
+        let hotInstanceT;
 let hotInstanceTT;
 let allDataT = [];
 let allDataTCopy = []; // Define allDataTCopy to store original data
@@ -892,7 +893,7 @@ async function initializeSpreadsheetT() {
         populateDropdownTF(allDataT);
 
         // Add event listener for row selection to display graph
-        container.addEventListener('click', function(event) {
+        container.addEventListener('click', function (event) {
             const row = hotInstanceT.getSelectedLast();
             if (row) {
                 const rowData = hotInstanceT.getDataAtRow(row[0]);
@@ -909,46 +910,50 @@ async function initializeSpreadsheetT() {
         await fetchAndProcessGrades();
 
         // Initialize the second Handsontable with PCB name and working quantity
-        initializeSecondSpreadsheet(allDataT);
+        initializeSecondSpreadsheet(allDataT, aggregatedData);
 
     } catch (error) {
         console.error("Error getting documents: ", error);
     }
 }
 
-// Fetch grades data and subtract from quantities in allDataT
+// Function to fetch and process grades data
 async function fetchAndProcessGrades() {
     try {
         const gradesSnapshot = await getDocs(collection(db, 'grades'));
         const gradesData = [];
 
         gradesSnapshot.forEach(doc => {
-            const gradeData = doc.data().grades;
-            gradeData.forEach(grade => {
-                Object.entries(grade.components).forEach(([component, quantity]) => {
-                    gradesData.push({ component, quantity });
+            const docData = doc.data();
+            if (docData.pcbs && Array.isArray(docData.pcbs)) {
+                docData.pcbs.forEach(({ pcb, quantity }) => {
+                    gradesData.push({ pcb, quantity });
                 });
-            });
+            }
         });
 
         console.log('Grades Data:', gradesData);
 
-        gradesData.forEach(({ component, quantity }) => {
-            const index = allDataT.findIndex(item => item.bloxName === component);
-            if (index !== -1) {
-                allDataT[index].Working -= quantity;
-                if (allDataT[index].Working < 0) allDataT[index].Working = 0;
+        // Aggregate total quantities for each PCB
+        const aggregatedData = gradesData.reduce((acc, { pcb, quantity }) => {
+            if (!acc[pcb]) {
+                acc[pcb] = 0;
             }
-        });
+            acc[pcb] += quantity;
+            return acc;
+        }, {});
 
-        console.log('Updated Data after processing grades:', allDataT);
+        console.log('Aggregated Data:', aggregatedData);
+
+        // Store aggregatedData in a global variable to be used in initializeSecondSpreadsheet
+        window.aggregatedData = aggregatedData;
 
     } catch (error) {
         console.error("Error fetching grades data: ", error);
     }
 }
 
-// Initialize the second Handsontable for PCB name and working quantity
+// Function to initialize the second Handsontable for PCB name and working quantity
 function initializeSecondSpreadsheet(data) {
     const containerTT = document.getElementById('spreadsheetWrapperTestedtt');
 
@@ -957,9 +962,26 @@ function initializeSecondSpreadsheet(data) {
         hotInstanceTT.destroy();
     }
 
+    console.log(data);
+    console.log(window.aggregatedData);
+
+    // Prepare the data for the second Handsontable with aggregated adjustments
+    const finalData = data
+        .filter(item => item.bloxName) // Filter out any items with null or undefined bloxName
+        .map(item => {
+            const aggregatedValue = window.aggregatedData[item.bloxName] || 0; // Use default value if not found
+            const adjustedWorking = item.Working - aggregatedValue;
+            return {
+                bloxName: item.bloxName,
+                Working: adjustedWorking < 0 ? 0 : adjustedWorking
+            };
+        });
+
+    console.log('Final Data:', finalData);
+
     // Initialize Handsontable with PCB name and working quantity
     hotInstanceTT = new Handsontable(containerTT, {
-        data: data.map(item => ({ bloxName: item.bloxName, Working: item.Working })),
+        data: finalData,
         rowHeaders: true,
         colHeaders: ['Blox Name', 'We Have'],
         columns: [
@@ -1047,6 +1069,7 @@ initializeSpreadsheetT();
 
 
 
+
         // Function to initialize Handsontable instance for no PCBs in stock
         async function initializeNoStockSpreadsheet(bloxNamesWithZeroReminder = []) {
             const container = document.getElementById('spreadsheetWrapperNoStock');
@@ -1078,8 +1101,8 @@ initializeSpreadsheetT();
 
             // Define the list of blox names you want to check
             const bloxNamesToCheck = [
-                'Power', 'Lamp', 'Buzzer', 'Invert', 'Dark', 'Distance', 'IR', 'Motor Driver',
-                'Wire Tap', 'Button', 'AI', 'Wifi Clip V1', 'wifi Clip V2', 'Servo', 'Logic Gate',
+                'Power','Power USB', 'Lamp', 'Buzzer', 'Invert', 'Dark', 'Distance', 'IR', 'Motor Driver' , 'Motor Driver',
+                'Wire Tap', 'Wire Tap A', 'Button', 'AI', 'Wifi Clip V1', 'wifi Clip V2', 'Servo', 'Logic Gate',
                 'Toggle', 'Touch', 'Laser', 'Solar', 'Heat', 'New TX-RX', 'Old TX-RX', 'Magnet',
                 'Record And Repete', 'AI Chat', 'Clap', 'Tongee', 'Blix Power', 'Blix Led', 'Blix Buzzer', 'Blix Not', 'Blix Motor Driver', 'Blix Distance', 'Blix IR', 'Blix Switch'
             ];
