@@ -99,17 +99,18 @@
     }
 
     #login {
-  display: none; /* Initially hidden */
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  padding: 20px;
-  background-color: white;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  z-index: 1001;
-}
+      display: none;
+      /* Initially hidden */
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 20px;
+      background-color: white;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      z-index: 1001;
+    }
 
 
     #login h3 {
@@ -238,7 +239,7 @@
     </div>
   </div>
 
-  <div id="login" >
+  <div id="login">
     <h3>Login</h3>
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
@@ -250,42 +251,43 @@
       window.location.href = url;
     }
 
-   </script>
+  </script>
 
 
-<script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-app.js';
-  import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-firestore.js';
-  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-auth.js';
+  <script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-app.js';
+import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-firestore.js';
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-auth.js';
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyC0jbQgXGYAvX2znLQLflVfXUjREwl3JyY",
-    authDomain: "officetest-92e0d.firebaseapp.com",
-    projectId: "officetest-92e0d",
-    storageBucket: "officetest-92e0d.appspot.com",
-    messagingSenderId: "435215452631",
-    appId: "1:435215452631:web:75cd4ea4fb4d07b65be392"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyC0jbQgXGYAvX2znLQLflVfXUjREwl3JyY",
+  authDomain: "officetest-92e0d.firebaseapp.com",
+  projectId: "officetest-92e0d",
+  storageBucket: "officetest-92e0d.appspot.com",
+  messagingSenderId: "435215452631",
+  appId: "1:435215452631:web:75cd4ea4fb4d07b65be392"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-  async function login(email, password) {
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      console.log('Logged in successfully');
-      document.getElementById('login').style.display = 'none';
-    } catch (error) {
-      console.error('Login failed:', error.message);
-      alert('Login failed: ' + error.message);
-    }
+async function login(email, password) {
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    console.log('Logged in successfully');
+    localStorage.setItem('userLoggedIn', 'true'); // Store login status
+    // window.location.href = 'https://witrecords.vercel.app/Components/index.html'; // Redirect to home page
+  } catch (error) {
+    console.error('Login failed:', error.message);
+    alert('Login failed: ' + error.message);
   }
+}
 
-  document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
   const logo = document.querySelector('.logo');
   const loginBox = document.getElementById('login');
-  
+
   let timer;
   const longPressDuration = 1000; // 1 second
 
@@ -321,15 +323,18 @@
   onAuthStateChanged(auth, (user) => {
     if (user) {
       console.log('User is logged in:', user.email);
-      loginBox.style.display = 'none';
+      localStorage.setItem('userLoggedIn', 'true'); // Update login status
+      document.getElementById('login').style.display = 'none';
     } else {
       console.log('No user is logged in');
-      loginBox.style.display = 'none'; // Ensure it's hidden when no user is logged in
+      localStorage.setItem('userLoggedIn', 'false'); // Update login status
+      document.getElementById('login').style.display = 'none'; // Show login box if no user is logged in
     }
   });
 });
 
-</script>
+
+  </script>
 
 </body>
 
