@@ -1,0 +1,480 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dispatch Records</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            align-items: ce;
+        }
+
+        #app {
+            max-width: 600px;
+            margin: auto;
+            text-align: center;
+            padding-top: 165px;
+        }
+
+        #gradeForm {
+            margin-top: 20px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: #666;
+            margin-top: 40px;
+        }
+
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 5px 0;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+
+        #checkboxes {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .checkbox-label {
+            margin: 5px;
+        }
+
+        button {
+            margin: 10px;
+        }
+
+        #dataContainer {
+            margin-top: 20px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .checkbox-label {
+            margin-right: 10px;
+        }
+
+        /* General table styling */
+        table {
+            text-align: center;
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        /* Table headers */
+        th {
+            background-color: #f2f2f2;
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        /* Table cells */
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
+        /* Alternate row background color */
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        /* Table caption */
+        caption {
+            caption-side: top;
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 10px;
+            text-align: left;
+        }
+
+        /* Container padding */
+        #dataContainer {
+            padding: 20px;
+        }
+
+        #dateDropdown {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            width: 100%;
+            font-size: 16px;
+            background-color: #fff;
+            margin-top: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            /* background-image: url('data:image/svg+xml;charset=US-ASCII,<svg%20xmlns="http://www.w3.org/2000/svg"%20viewBox="0%200%204%205"><path%20fill="none"%20stroke="black"%20stroke-width="1"%20d="M0,1%20L2,4%20L4,1"/></svg>'); */
+            background-repeat: no-repeat;
+            background-position-x: 95%;
+            text-align: center;
+            background-position-y: 50%;
+        }
+
+        #dateDropdown:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+
+        #noteContainer {
+            margin-top: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+        }
+        header {
+            width: 100%;
+            background-color: #fff;
+            padding: 10px 0;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+        
+        .logo {
+            width: 70px;
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <center><img src="../images/WitBlox Logo.png" alt="WitBlox Logo" class="logo"></center>
+        <h1>WitBlox PCB Counter</h1>
+    </header>
+    <div id="app">
+        <h1>PCB Counter</h1>
+        <button id="addDataButton">Add Data</button>
+        <div id="formContainer" style="display: none;">
+            <form id="pcbForm">
+                <div id="checkboxes">
+                    <!-- Checkboxes will be dynamically added here -->
+                </div>
+                <div id="noteContainer">
+                    <label for="note">Note:</label>
+                    <textarea id="note" name="note" placeholder="Enter any additional notes here..."></textarea>
+                </div>
+                <button type="button" id="saveButton" style="display: none;">Save</button>
+                <button type="button" id="cancelButton" style="display: none;">Cancel</button>
+            </form>
+        </div>
+        <br>
+        <h2>Show Data</h2>
+        <div>
+            <label for="dateDropdown">Select Date:</label>
+            <select id="dateDropdown">
+                <!-- Options will be dynamically added here -->
+            </select>
+            <button id="showDataButton" style="display: none;">Show</button>
+            <button id="cancelShowButton" style="display: none;">Cancel</button>
+        </div>
+        <div id="dataContainer">
+            <!-- Data from Firestore will be displayed here -->
+        </div>
+        <a href="../index.html"><button id="homebutton">Home</button></a><br><br>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-app.js';
+        import { getFirestore, collection, addDoc, getDocs, doc, getDoc } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-firestore.js';
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-auth.js';
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+  apiKey: "AIzaSyD1eO0KmvL_x47R1E2zMn1HmmNSqMpDMY0",
+  authDomain: "savitadiapp.firebaseapp.com",
+  projectId: "savitadiapp",
+  storageBucket: "savitadiapp.appspot.com",
+  messagingSenderId: "352632763891",
+  appId: "1:352632763891:web:b36465c25278c878c6ce86"
+};
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const addDataButton = document.getElementById("addDataButton");
+            const formContainer = document.getElementById("formContainer");
+            const pcbForm = document.getElementById("pcbForm");
+            const checkboxes = document.getElementById("checkboxes");
+            const saveButton = document.getElementById("saveButton");
+            const cancelButton = document.getElementById("cancelButton");
+            const dateDropdown = document.getElementById("dateDropdown");
+            const showDataButton = document.getElementById("showDataButton");
+            const cancelShowButton = document.getElementById("cancelShowButton");
+            const dataContainer = document.getElementById("dataContainer");
+            const noteInput = document.getElementById("note");
+
+            const pcbs = [
+                "Power",'Power USB', "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR", "Motor Driver" , 'Motor Driver 2Pin', "Wire Tap",'Wire Tap A',
+                "Button", "AI", "Wifi Clip V1", "Wifi Clip V2", "Servo", "Logic Gate", "Toggle", "Touch",
+                "Laser", "Solar", "Heat", "New TX-RX", "Old TX-RX", "Magnet", "Record And Repeat",
+                "AI Chat", "Clap", "Tongee", 'Moisture'
+            ];
+
+            pcbs.forEach(pcb => {
+                const container = document.createElement("div");
+                container.className = "checkbox-container";
+
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.name = "pcb";
+                checkbox.value = pcb;
+                checkbox.addEventListener("change", handleCheckboxChange);
+
+                const label = document.createElement("label");
+                label.className = "checkbox-label";
+                label.textContent = pcb;
+
+                const input = document.createElement("input");
+                input.type = "number";
+                input.name = `quantity${pcb.replace(/\s+/g, '')}`;
+                input.min = "1";
+                input.style.display = "none";
+
+                container.appendChild(checkbox);
+                container.appendChild(label);
+                container.appendChild(input);
+
+                checkboxes.appendChild(container);
+                checkboxes.appendChild(document.createElement("br")); // Add a line break after each container
+            });
+
+            addDataButton.addEventListener("click", function () {
+                formContainer.style.display = "block";
+                cancelButton.style.display = "inline-block";
+            });
+
+            cancelButton.addEventListener("click", function () {
+                formContainer.style.display = "none";
+                resetForm();
+            });
+
+            // Save button event listener
+            saveButton.addEventListener("click", async function () {
+                const selectedPCBs = Array.from(document.querySelectorAll("input[name='pcb']:checked"))
+                    .map(checkbox => checkbox.value);
+
+                if (selectedPCBs.length > 0) {
+                    const pcbQuantities = selectedPCBs.map(value => {
+                        const inputName = `quantity${value.replace(/\s+/g, '')}`;
+                        const inputElement = document.querySelector(`input[name='${inputName}']`);
+                        const inputQuantity = parseInt(inputElement.value);
+
+                        if (isNaN(inputQuantity) || inputQuantity <= 0) {
+                            throw new Error(`Invalid quantity for ${value}`);
+                        }
+
+                        return {
+                            pcb: value,
+                            quantity: inputQuantity
+                        };
+                    });
+
+                    const data = {
+                        pcbs: pcbQuantities,
+                        note: noteInput.value,
+                        date: new Date().toISOString()
+                    };
+
+                    try {
+                        await addDoc(collection(db, "savitaapp"), data);
+                        alert("Data saved successfully!");
+                        formContainer.style.display = "none";
+                        resetForm();
+                        loadSavedData();
+                    } catch (error) {
+                        console.error("Error saving data: ", error);
+                        alert(`Error saving data: ${error.message}`);
+                    }
+                } else {
+                    alert("Please select a PCB and enter quantities.");
+                }
+            });
+
+            function handleCheckboxChange(event) {
+                const checkbox = event.target;
+                const input = checkbox.nextElementSibling.nextElementSibling;
+                if (checkbox.checked) {
+                    input.style.display = "inline-block";
+                } else {
+                    input.style.display = "none";
+                }
+
+                const selectedPCBs = document.querySelectorAll("input[name='pcb']:checked");
+                if (selectedPCBs.length > 0) {
+                    saveButton.style.display = "inline-block";
+                    cancelButton.style.display = "inline-block";
+                } else {
+                    saveButton.style.display = "none";
+                    cancelButton.style.display = "none";
+                }
+            }
+
+            function resetForm() {
+                document.querySelectorAll("input[name='pcb']").forEach(checkbox => {
+                    checkbox.checked = false;
+                    checkbox.nextElementSibling.nextElementSibling.style.display = "none";
+                });
+                noteInput.value = ""; // Clear the note input
+            }
+            async function loadSavedData() {
+    try {
+        // Fetch all documents from the "savitaapp" collection
+        const querySnapshot = await getDocs(collection(db, "savitaapp"));
+        
+        // Convert querySnapshot to an array of objects with id and date
+        const dataArray = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            date: new Date(doc.data().date),
+            text: new Date(doc.data().date).toLocaleString()
+        }));
+
+        // Sort the array by date in descending order
+        dataArray.sort((a, b) => b.date - a.date);
+        
+        // Clear the current options in the dropdown
+        dateDropdown.innerHTML = "";
+
+        // Create and append options to the dropdown
+        dataArray.forEach((item, index) => {
+            const option = document.createElement("option");
+            option.value = item.id;
+            option.textContent = item.text;
+
+            // Highlight the newest entry
+            if (index === 0) {
+                option.style.backgroundColor = "#dff0d8"; // Light green background
+                option.style.fontWeight = "bold";
+            }
+
+            dateDropdown.appendChild(option);
+        });
+
+        // Optionally, set the newest entry as selected
+        if (dataArray.length > 0) {
+            dateDropdown.selectedIndex = 0;
+        }
+    } catch (error) {
+        console.error("Error loading data: ", error);
+    }
+}
+
+            dateDropdown.addEventListener("change", function () {
+                const selectedDateId = dateDropdown.value;
+                if (selectedDateId) {
+                    showDataButton.style.display = "inline-block";
+                    cancelShowButton.style.display = "inline-block";
+                } else {
+                    showDataButton.style.display = "none";
+                    cancelShowButton.style.display = "none";
+                }
+            });
+
+            cancelShowButton.addEventListener("click", function () {
+                dataContainer.innerHTML = ""; // Clear data container
+                showDataButton.style.display = "none";
+                cancelShowButton.style.display = "none";
+            });
+
+          
+            showDataButton.addEventListener("click", async function () {
+                const selectedDateId = dateDropdown.value;
+                if (selectedDateId) {
+                    try {
+                        const docRef = doc(db, "savitaapp", selectedDateId);
+                        const docSnap = await getDoc(docRef);
+                        if (docSnap.exists()) {
+                            const data = docSnap.data();
+
+                            // Table for PCBs
+                            
+                            let pcbsTable = `
+                            <p><strong>Note:</strong> ${data.note}</p>
+                                <table border="1">
+                                    <thead>
+                                        <tr>
+                                            <th>PCB</th>
+                                            <th>Quantity</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${data.pcbs.map(pcb => `
+                                            <tr>
+                                                <td>${pcb.pcb}</td>
+                                                <td>${pcb.quantity}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            `;
+
+                            dataContainer.innerHTML = `
+                                <p>PCBs:</p>
+                                ${pcbsTable}
+                            `;
+                        } else {
+                            dataContainer.innerHTML = "No data found.";
+                        }
+                    } catch (error) {
+                        console.error("Error getting document: ", error);
+                    }
+                }
+            });
+
+            // Load saved data when the page loads
+            loadSavedData();
+        });
+    </script>
+</body>
+
+</html>

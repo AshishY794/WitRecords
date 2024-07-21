@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>PCB Given Record</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        h1 {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin: 0;
+        }
+
+        label,
+        input,
+        select,
+        button {
+            display: block;
+            margin: 10px auto;
+            width: 80%;
+            max-width: 400px;
+        }
+
+        label {
+            font-weight: normal;
+            margin-bottom: 5px;
+        }
+
+        input,
+        select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        h2 {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        #recordedData {
+            margin: 20px auto;
+            width: 80%;
+            max-width: 800px;
+        }
+
+        div[data-date] {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 10px 0;
+            padding: 10px;
+        }
+
+        div[data-date] h3 {
+            cursor: pointer;
+            margin: 0;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-bottom: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .data-list {
+            padding: 10px;
+        }
+
+        .data-list p {
+            margin: 0;
+            padding: 5px 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .data-list p:last-child {
+            border-bottom: none;
+        }
+
+        @media (max-width: 768px) {
+
+            label,
+            input,
+            select,
+            button {
+                width: 90%;
+            }
+
+            h1,
+            h2 {
+                font-size: 1.5em;
+            }
+
+            button {
+                padding: 10px;
+                font-size: 14px;
+            }
+
+            div[data-date] h3 {
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+
+            h1,
+            h2 {
+                font-size: 1.2em;
+            }
+
+            button {
+                padding: 8px;
+                font-size: 12px;
+            }
+
+            div[data-date] h3 {
+                padding: 8px;
+            }
+        }
+        header {
+            width: 100%;
+            background-color: #fff;
+            /* padding: 10px 0; */
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+        
+        .logo {
+            width: 70px;
+            max-width: 100%;
+            height: auto;
+        }
+        .app{
+            padding-top: 165px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <center><img src="../images/WitBlox Logo.png" alt="WitBlox Logo" class="logo"></center>
+        <h2>WitBlox PCB Counter</h2>
+    </header>
+    <div class="app">
+    <h1>PCB Given Record</h1>
+
+    <label for="pcb">Select PCB:</label>
+    <select id="pcb"></select>
+
+    <label for="quantity">Enter Quantity:</label>
+    <input type="number" id="quantity" name="quantity">
+
+    <button id="submitBtn">Submit</button>
+
+    <h2>Recorded Data:</h2>
+    <div id="recordedData"></div>
+    <a href="../index.html"><button id="homebutton">Home</button></a><br><br>
+
+</div>
+<script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-app.js';
+    import { getFirestore, collection, addDoc, getDocs, query, where, deleteDoc, doc } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-firestore.js';
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyD1eO0KmvL_x47R1E2zMn1HmmNSqMpDMY0",
+        authDomain: "savitadiapp.firebaseapp.com",
+        projectId: "savitadiapp",
+        storageBucket: "savitadiapp.appspot.com",
+        messagingSenderId: "352632763891",
+        appId: "1:352632763891:web:b36465c25278c878c6ce86"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const pcbs = [
+        "Power", "Power USB", "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR",
+        "Motor Driver", "Motor Driver 2Pin", "Wire Tap", "Wire Tap A", "Button",
+        "AI", "Wifi Clip V1", "Wifi Clip V2", "Servo", "Logic Gate", "Toggle",
+        "Touch", "Laser", "Solar", "Heat", "New TX-RX", "Old TX-RX", "Magnet",
+        "Record And Repeat", "AI Chat", "Clap", "Tongee", "Moisture"
+    ];
+
+    // Populate the dropdown list with PCB names
+    const pcbDropdown = document.getElementById('pcb');
+
+    pcbs.forEach(pcb => {
+        const option = document.createElement('option');
+        option.value = pcb;
+        option.textContent = pcb;
+        pcbDropdown.appendChild(option);
+    });
+
+    document.getElementById('submitBtn').addEventListener('click', async () => {
+        const selectedPcb = pcbDropdown.value;
+        const quantity = document.getElementById('quantity').value;
+
+        if (selectedPcb && quantity) {
+            try {
+                // Get today's date
+                const today = new Date().toISOString().split('T')[0];
+
+                // Check if the PCB already exists in Firestore for today
+                const pcbQuery = query(collection(db, "savitatoDispatch"), where("pcb", "==", selectedPcb), where("date", "==", today));
+                const querySnapshot = await getDocs(pcbQuery);
+
+                let totalQuantity = parseInt(quantity);
+                if (!querySnapshot.empty) {
+                    for (const documentSnapshot of querySnapshot.docs) {
+                        totalQuantity += documentSnapshot.data().quantity;
+                        await deleteDoc(doc(db, "savitatoDispatch", documentSnapshot.id)); // Delete existing entry to replace it with updated quantity
+                    }
+                }
+
+                await addDoc(collection(db, "savitatoDispatch"), {
+                    pcb: selectedPcb,
+                    quantity: totalQuantity,
+                    date: today,
+                    timestamp: new Date()
+                });
+
+                // Update or add recorded data on the page
+                const recordedData = document.getElementById('recordedData');
+                let dateSection = document.querySelector(`div[data-date="${today}"]`);
+                if (!dateSection) {
+                    dateSection = document.createElement('div');
+                    dateSection.setAttribute('data-date', today);
+                    const dateHeader = document.createElement('h3');
+                    dateHeader.textContent = today;
+                    dateHeader.addEventListener('click', () => {
+                        const dataList = dateSection.querySelector('.data-list');
+                        dataList.style.display = dataList.style.display === 'none' ? 'block' : 'none';
+                    });
+                    const dataList = document.createElement('div');
+                    dataList.classList.add('data-list');
+                    dataList.style.display = 'none';
+                    dateSection.appendChild(dateHeader);
+                    dateSection.appendChild(dataList);
+                    recordedData.prepend(dateSection); // Prepend the new date section
+                }
+
+                const dataList = dateSection.querySelector('.data-list');
+                let record = dataList.querySelector(`p[data-pcb="${selectedPcb}"]`);
+                if (record) {
+                    record.textContent = `PCB: ${selectedPcb}, Quantity: ${totalQuantity}`;
+                } else {
+                    record = document.createElement('p');
+                    record.setAttribute('data-pcb', selectedPcb);
+                    record.textContent = `PCB: ${selectedPcb}, Quantity: ${totalQuantity}`;
+                    dataList.appendChild(record);
+                }
+
+                // Clear input fields
+                pcbDropdown.selectedIndex = 0;
+                document.getElementById('quantity').value = '';
+            } catch (e) {
+                console.error("Error adding document: ", e);
+            }
+        } else {
+            alert('Please select a PCB and enter a quantity.');
+        }
+    });
+
+    // Load all recorded data
+    const loadRecordedData = async () => {
+        const recordedData = document.getElementById('recordedData');
+        recordedData.innerHTML = ''; // Clear existing data
+
+        // Query to get all records
+        const pcbQuery = query(collection(db, "savitatoDispatch"));
+        const querySnapshot = await getDocs(pcbQuery);
+        const dateRecords = {};
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            if (!dateRecords[data.date]) {
+                dateRecords[data.date] = [];
+            }
+            dateRecords[data.date].push(data);
+        });
+
+        // Sort dates in descending order
+        const sortedDates = Object.keys(dateRecords).sort((a, b) => new Date(b) - new Date(a));
+
+        sortedDates.forEach(date => {
+            const dateSection = document.createElement('div');
+            dateSection.setAttribute('data-date', date);
+            const dateHeader = document.createElement('h3');
+            dateHeader.textContent = date;
+            dateHeader.addEventListener('click', () => {
+                const dataList = dateSection.querySelector('.data-list');
+                dataList.style.display = dataList.style.display === 'none' ? 'block' : 'none';
+            });
+            const dataList = document.createElement('div');
+            dataList.classList.add('data-list');
+            dataList.style.display = 'none';
+            dateSection.appendChild(dateHeader);
+            dateSection.appendChild(dataList);
+            recordedData.appendChild(dateSection);
+
+            dateRecords[date].forEach(record => {
+                const recordElement = document.createElement('p');
+                recordElement.setAttribute('data-pcb', record.pcb);
+                recordElement.textContent = `PCB: ${record.pcb}, Quantity: ${record.quantity}`;
+                dataList.appendChild(recordElement);
+            });
+        });
+    };
+
+    // Initial load of recorded data
+    loadRecordedData();
+</script>
+
+</body>
+
+</html>

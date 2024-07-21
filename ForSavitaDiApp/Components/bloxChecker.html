@@ -1,0 +1,557 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            align-items: ce;
+        }
+
+        #app {
+            max-width: 600px;
+            margin: auto;
+            text-align: center;
+            padding-top: 165px;
+        }
+
+        #gradeForm {
+            margin-top: 20px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: #666;
+            margin-top: 40px;
+        }
+
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 5px 0;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+
+        #checkboxes {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .checkbox-label {
+            margin: 5px;
+        }
+
+        button {
+            margin: 10px;
+        }
+
+        #dataContainer {
+            margin-top: 20px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .checkbox-label {
+            margin-right: 10px;
+        }
+
+        /* General table styling */
+        table {
+            text-align: center;
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        /* Table headers */
+        th {
+            background-color: #f2f2f2;
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        /* Table cells */
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
+        /* Alternate row background color */
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        /* Table caption */
+        caption {
+            caption-side: top;
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 10px;
+            text-align: left;
+        }
+
+        /* Container padding */
+        #dataContainer {
+            padding: 20px;
+        }
+
+        #dateDropdown {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            width: 100%;
+            font-size: 16px;
+            background-color: #fff;
+            margin-top: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            /* background-image: url('data:image/svg+xml;charset=US-ASCII,<svg%20xmlns="http://www.w3.org/2000/svg"%20viewBox="0%200%204%205"><path%20fill="none"%20stroke="black"%20stroke-width="1"%20d="M0,1%20L2,4%20L4,1"/></svg>'); */
+            background-repeat: no-repeat;
+            background-position-x: 95%;
+            text-align: center;
+            background-position-y: 50%;
+        }
+
+        #dateDropdown:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+
+        
+        header {
+            width: 100%;
+            background-color: #fff;
+            padding: 10px 0;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+        
+        .logo {
+            width: 70px;
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <center><img src="../images/WitBlox Logo.png" alt="WitBlox Logo" class="logo"></center>
+        <h1>WitBlox PCB Counter</h1>
+    </header>
+    <div id="app">
+        <h1>Blox Checker </h1>
+        <button id="addDataButton">Add Data</button>
+        <div id="formContainer" style="display: none;">
+            <form id="gradeForm">
+                <div id="checkboxes">
+                    <!-- Checkboxes will be dynamically added here -->
+                </div>
+                <button type="button" id="saveButton" style="display: none;">Save</button>
+                <button type="button" id="cancelButton" style="display: none;">Cancel</button>
+            </form>
+        </div>
+        <br>
+        <h2>Show Data</h2>
+        <div>
+            <label for="dateDropdown">Select Date:</label>
+            <select id="dateDropdown">
+                <!-- Options will be dynamically added here -->
+            </select>
+            <button id="showDataButton" style="display: none;">Show</button>
+            <button id="cancelShowButton" style="display: none;">Cancel</button>
+        </div>
+        <div id="dataContainer">
+            <!-- Data from Firestore will be displayed here -->
+        </div>
+        <a href="../index.html"><button id="homebutton">Home</button></a><br><br>
+
+    </div>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-app.js';
+        import { getFirestore, collection, addDoc, getDocs, doc, getDoc } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-firestore.js';
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-auth.js';
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+  apiKey: "AIzaSyD1eO0KmvL_x47R1E2zMn1HmmNSqMpDMY0",
+  authDomain: "savitadiapp.firebaseapp.com",
+  projectId: "savitadiapp",
+  storageBucket: "savitadiapp.appspot.com",
+  messagingSenderId: "352632763891",
+  appId: "1:352632763891:web:b36465c25278c878c6ce86"
+};
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+
+    
+    document.addEventListener("DOMContentLoaded", function () {
+            const addDataButton = document.getElementById("addDataButton");
+            const formContainer = document.getElementById("formContainer");
+            const gradeForm = document.getElementById("gradeForm");
+            const checkboxes = document.getElementById("checkboxes");
+            const saveButton = document.getElementById("saveButton");
+            const cancelButton = document.getElementById("cancelButton");
+            const dateDropdown = document.getElementById("dateDropdown");
+            const showDataButton = document.getElementById("showDataButton");
+            const cancelShowButton = document.getElementById("cancelShowButton");
+            const dataContainer = document.getElementById("dataContainer");
+
+            const grades = [
+                { kit: 'Mega Kit', components: { Power: 1, Lamp: 1, Buzzer: 1, 'Wire Tap A': 2, Invert: 1, Dark: 1, 'Motor Driver': 2, Distance: 1, IR: 1 } },
+
+                { kit: 'AI Kit', components: { Power: 1, Lamp: 1, Buzzer: 1, 'Wire Tap A': 2, Invert: 1, Dark: 1, 'Motor Driver': 2, Distance: 2, IR: 1, AI: 1, Servo: 1 } },
+
+                { kit: 'Wi-FI Kit', components: { Power: 1, Lamp: 1, Buzzer: 1, 'Wire Tap A': 2, Invert: 1, Dark: 1, 'Motor Driver': 2, Distance: 2, IR: 1, 'Wifi Clip V2': 1, Servo: 1 } },
+
+                { kit: 'Lab Kit', components: { Power: 1, Lamp: 1, Buzzer: 1, 'Wire Tap A': 2, Invert: 1, Dark: 1, 'Motor Driver': 2, Distance: 2, AI: 1, Button: 1, IR: 1 } },
+
+                { kit: 'First Aid Kit', components: { Power: 4, Lamp: 4, Buzzer: 4, 'Wire Tap A': 8, Invert: 4, Dark: 4, 'Motor Driver': 8, Distance: 4, AI: 1, Button: 4, IR: 4 } },
+
+                { grade: 1, components: { Power: 1, Lamp: 1, Button: 1, 'Wire Tap': 2 } },
+
+                { grade: 2, components: { Power: 1, Lamp: 1, Buzzer: 1, Dark: 1, 'Wire Tap': 2 } },
+
+                { grade: 3, components: { Power: 1, 'Motor Driver': 1, Button: 1, Lamp: 1, 'Wire Tap': 2 } },
+
+                { grade: 4, components: { Power: 1, 'Motor Driver': 1, Button: 1, Dark: 1, Invert: 1 } },
+
+                { grade: 5, components: { Power: 1, 'Motor Driver': 2, Distance: 1, IR: 1, Invert: 1 } },
+
+                { grade: 6, components: { Power: 1, 'Motor Driver': 2, Distance: 1, IR: 1, Invert: 1, Button: 1 } },
+
+                { grade: 7, components: { Power: 1, 'Motor Driver': 1, AI: 1, Buzzer: 1, Lamp: 1, 'Wire Tap': 2 } },
+
+                { grade: 8, components: { Buzzer: 1, Dark: 1, Distance: 1, IR: 1, Lamp: 1 } },
+
+                { grade: 9, components: { Power: 1, 'Motor Driver': 2, Distance: 1, IR: 1 } },
+
+                { grade: 10, components: { Power: 1, Lamp: 1, Buzzer: 1, AI: 1 } }
+            ];
+
+            grades.forEach(grade => {
+                const container = document.createElement("div");
+                container.className = "checkbox-container";
+
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.name = "grade";
+                checkbox.value = grade.grade || grade.kit;
+                checkbox.addEventListener("change", handleCheckboxChange);
+
+                const label = document.createElement("label");
+                label.className = "checkbox-label";
+                label.textContent = grade.grade ? `Grade ${grade.grade}` : grade.kit;
+
+                const input = document.createElement("input");
+                input.type = "number";
+                input.name = `quantity${grade.grade ? grade.grade : grade.kit.replace(/\s+/g, '')}`;
+                input.min = "1";
+                input.style.display = "none";
+
+                container.appendChild(checkbox);
+                container.appendChild(label);
+                container.appendChild(input);
+
+                checkboxes.appendChild(container);
+                checkboxes.appendChild(document.createElement("br")); // Add a line break after each container
+            });
+
+            addDataButton.addEventListener("click", function () {
+                formContainer.style.display = "block";
+                cancelButton.style.display = "inline-block";
+            });
+
+            cancelButton.addEventListener("click", function () {
+                formContainer.style.display = "none";
+                resetForm();
+            });
+
+            saveButton.addEventListener("click", async function () {
+                const selectedGrades = Array.from(document.querySelectorAll("input[name='grade']:checked"))
+                    .map(checkbox => checkbox.value);
+
+                if (selectedGrades.length > 0) {
+                    const gradeQuantities = selectedGrades.map(value => {
+                        const grade = grades.find(g => g.grade === parseInt(value) || g.kit === value);
+                        const inputName = `quantity${grade.grade ? grade.grade : grade.kit.replace(/\s+/g, '')}`;
+                        const inputElement = document.querySelector(`input[name='${inputName}']`);
+                        const inputQuantity = parseInt(inputElement.value);
+
+                        if (isNaN(inputQuantity) || inputQuantity <= 0) {
+                            throw new Error(`Invalid quantity for ${grade.grade ? `Grade ${grade.grade}` : grade.kit}`);
+                        }
+
+                        const components = {};
+                        for (const [component, quantity] of Object.entries(grade.components)) {
+                            components[component] = quantity * inputQuantity;
+                        }
+
+                        return {
+                            grade: grade.grade || null,
+                            kit: grade.kit || null,
+                            quantity: inputQuantity,
+                            components
+                        };
+                    });
+
+                    const data = {
+                        grades: gradeQuantities,
+                        aggregatedComponents: aggregateComponents(gradeQuantities), // Calculate aggregated components
+                        date: new Date().toISOString()
+                    };
+
+                    try {
+                        await addDoc(collection(db, "savitaappBloxCheaker"), data);
+                        alert("Data saved successfully!");
+                        formContainer.style.display = "none";
+                        resetForm();
+                        loadSavedData();
+                    } catch (error) {
+                        console.error("Error saving data: ", error);
+                        alert(`Error saving data: ${error.message}`);
+                    }
+                } else {
+                    alert("Please select a grade and enter quantities.");
+                }
+            });
+
+            function handleCheckboxChange(event) {
+                const checkbox = event.target;
+                const input = checkbox.nextElementSibling.nextElementSibling;
+                if (checkbox.checked) {
+                    input.style.display = "inline-block";
+                } else {
+                    input.style.display = "none";
+                }
+
+                const selectedGrades = document.querySelectorAll("input[name='grade']:checked");
+                if (selectedGrades.length > 0) {
+                    saveButton.style.display = "inline-block";
+                    cancelButton.style.display = "inline-block";
+                } else {
+                    saveButton.style.display = "none";
+                    cancelButton.style.display = "none";
+                }
+            }
+
+            function resetForm() {
+                document.querySelectorAll("input[name='grade']").forEach(checkbox => {
+                    checkbox.checked = false;
+                    checkbox.nextElementSibling.nextElementSibling.style.display = "none";
+                });
+            }
+            async function loadSavedData() {
+                try {
+                    const querySnapshot = await getDocs(collection(db, "savitaappBloxCheaker"));
+
+                    // Convert querySnapshot to an array and sort by date
+                    const dataArray = querySnapshot.docs.map(doc => ({
+                        id: doc.id,
+                        date: new Date(doc.data().date),
+                        data: doc.data()
+                    }));
+
+                    // Sort dataArray in descending order of date
+                    dataArray.sort((a, b) => b.date - a.date);
+
+                    dateDropdown.innerHTML = "";
+
+                    // Create options and highlight the newest one
+                    dataArray.forEach((item, index) => {
+                        const option = document.createElement("option");
+                        option.value = item.id;
+                        option.textContent = item.date.toLocaleString();
+
+                        if (index === 0) {
+                            // Highlight the newest option
+                            option.style.backgroundColor = "#dff0d8"; // Light green background
+                            option.style.fontWeight = "bold";
+                        }
+
+                        dateDropdown.appendChild(option);
+                    });
+
+                    // Set the first option as selected
+                    if (dataArray.length > 0) {
+                        dateDropdown.selectedIndex = 0;
+                    }
+                } catch (error) {
+                    console.error("Error loading data: ", error);
+                }
+            }
+
+            function aggregateComponents(gradeQuantities) {
+                const aggregatedComponents = {};
+
+                // Aggregate quantities
+                gradeQuantities.forEach(gq => {
+                    for (const [component, quantity] of Object.entries(gq.components)) {
+                        if (!aggregatedComponents[component]) {
+                            aggregatedComponents[component] = 0;
+                        }
+                        aggregatedComponents[component] += quantity;
+                    }
+                });
+
+                return aggregatedComponents;
+            }
+
+            dateDropdown.addEventListener("change", function () {
+                const selectedDateId = dateDropdown.value;
+                if (selectedDateId) {
+                    showDataButton.style.display = "inline-block";
+                    cancelShowButton.style.display = "inline-block";
+                } else {
+                    showDataButton.style.display = "none";
+                    cancelShowButton.style.display = "none";
+                }
+            });
+
+            cancelShowButton.addEventListener("click", function () {
+                dataContainer.innerHTML = ""; // Clear data container
+                showDataButton.style.display = "none";
+                cancelShowButton.style.display = "none";
+            });
+
+            showDataButton.addEventListener("click", async function () {
+                const selectedDateId = dateDropdown.value;
+                if (selectedDateId) {
+                    try {
+                        const docRef = doc(db, "savitaappBloxCheaker", selectedDateId);
+                        const docSnap = await getDoc(docRef);
+                        if (docSnap.exists()) {
+                            const data = docSnap.data();
+
+                            // Table for Grades and Kits
+                            let gradesTable = `
+                    <table border="1">
+                        <thead>
+                            <tr>
+                                <th>Grade/Kit</th>
+                                <th>Quantity</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.grades.map(gq => `
+                                <tr>
+                                    <td>${gq.grade ? `Grade ${gq.grade}` : gq.kit}</td>
+                                    <td>${gq.quantity}</td>
+                                    <td>${new Date(data.date).toLocaleString()}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                            // Table for Components
+                            let componentsTable = `
+                    <table border="1">
+                        <thead>
+                            <tr>
+                                <th>Grade</th>
+                                <th>Component</th>
+                                <th>Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.grades.map(gq => gq.components ? Object.entries(gq.components).map(([component, quantity]) => `
+                                <tr>
+                                    <td>${gq.grade ? `Grade ${gq.grade}` : gq.kit}</td>
+                                    <td>${component}</td>
+                                    <td>${quantity}</td>
+                                </tr>
+                            `).join('') : '').join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                            // Table for Aggregated Components
+                            let aggregatedTable = `
+                    <table border="1">
+                        <thead>
+                            <tr>
+                                <th>Component</th>
+                                <th>Total Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Object.entries(data.aggregatedComponents).map(([component, totalQuantity]) => `
+                                <tr>
+                                    <td>${component}</td>
+                                    <td>${totalQuantity}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                            dataContainer.innerHTML = `
+                    <p>Grades and Kits:</p>
+                    ${gradesTable}
+                    
+                    <p>Components:</p>
+                    ${componentsTable}
+                    
+                    <p>Aggregated Component Quantities:</p>
+                    ${aggregatedTable}
+                `;
+                        } else {
+                            dataContainer.innerHTML = "No data found.";
+                        }
+                    } catch (error) {
+                        console.error("Error getting document: ", error);
+                    }
+                }
+            });
+
+            loadSavedData();
+        });
+
+    </script>
+</body>
+
+</html>

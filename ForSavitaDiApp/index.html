@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WitBlox Record Room</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        header {
+            width: 100%;
+            background-color: #fff;
+            padding: 10px 0;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        .content {
+            margin-top: 165px;
+            /* Adjust this value to match the height of the header */
+            width: 80%;
+            max-width: 600px;
+        }
+
+        .section {
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            position: relative;
+            background-size: cover;
+            background-position: center;
+            color: white;
+            /* Adjust text color for better readability */
+        }
+
+        .section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h2 {
+            margin-bottom: 10px;
+            color: white;
+            /* Ensure the text is visible on the background image */
+        }
+
+        .section p {
+            color: white;
+            /* Ensure the text is visible on the background image */
+        }
+
+        .section::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            /* Dark overlay for better text readability */
+            border-radius: 8px;
+            z-index: 1;
+        }
+
+        .section-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .logo {
+            width: 70px;
+            max-width: 100%;
+            height: auto;
+        }
+
+        h1 {
+            font-weight: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+            color: #333;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <img src="images/WitBlox Logo.png" alt="WitBlox Logo" class="logo">
+        <h1>WitBlox PCB Counter</h1>
+    </header>
+
+    <div class="content">
+        <!-- PCB Record Section -->
+        <div class="section" onclick="navigateTo('Components/bloxChecker.html')"
+            style="background-image: url('images/record.png');">
+            <div class="section-content">
+                <h2>Count PCB's from Grade</h2>
+                <p>Click here to Get PCB Count From Grade Count.</p>
+            </div>
+        </div>
+
+        <!-- Dipak Section -->
+        <div class="section" onclick="navigateTo('Components/dispatch.html')"
+            style="background-image: url('images/dispatch.jpg');">
+            <div class="section-content">
+                <h2>PCB Count from Blox</h2>
+                <p>Click here to Get PCB Count From Blox Count.</p>
+            </div>
+        </div>
+
+        <!-- Dipak Section -->
+        <div class="section" onclick="navigateTo('Components/pcbgivenrecord.html')"
+            style="background-image: url('images/Designer.png');">
+            <div class="section-content">
+                <h2>PCB Given Record</h2>
+                <p>Click here to manage PCB Count Given for Production</p>
+            </div>
+        </div>
+
+
+
+        <script>
+            function navigateTo(url) {
+                window.location.href = url;
+            }
+
+        </script>
+
+        <!-- 
+        <script type="module">
+            import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-app.js';
+            import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-firestore.js';
+            import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-auth.js';
+
+            const firebaseConfig = {
+                apiKey: "AIzaSyC0jbQgXGYAvX2znLQLflVfXUjREwl3JyY",
+                authDomain: "officetest-92e0d.firebaseapp.com",
+                projectId: "officetest-92e0d",
+                storageBucket: "officetest-92e0d.appspot.com",
+                messagingSenderId: "435215452631",
+                appId: "1:435215452631:web:75cd4ea4fb4d07b65be392"
+            };
+
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+
+            async function login(email, password) {
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                    // console.log('Logged in successfully');
+                    localStorage.setItem('userLoggedIn', 'true'); // Store login status
+                    // window.location.href = 'https://witrecords.vercel.app/Components/index.html'; // Redirect to home page
+                } catch (error) {
+                    console.error('Login failed:', error.message);
+                    alert('Login failed: ' + error.message);
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const logo = document.querySelector('.logo');
+                const loginBox = document.getElementById('login');
+
+                let timer;
+                const longPressDuration = 1000; // 1 second
+
+                logo.addEventListener('touchstart', (event) => {
+                    timer = setTimeout(() => {
+                        loginBox.style.display = 'block';
+                    }, longPressDuration);
+                });
+
+                logo.addEventListener('touchend', (event) => {
+                    clearTimeout(timer);
+                });
+
+                document.addEventListener('keydown', (event) => {
+                    if (event.ctrlKey && event.key === 'a') {
+                        event.preventDefault();
+                        loginBox.style.display = loginBox.style.display === 'none' ? 'block' : 'none';
+                    }
+                });
+
+                document.addEventListener('click', (event) => {
+                    if (loginBox.style.display === 'block' && !loginBox.contains(event.target)) {
+                        loginBox.style.display = 'none';
+                    }
+                });
+
+                document.getElementById('loginButton').addEventListener('click', async () => {
+                    const email = document.getElementById('email').value;
+                    const password = document.getElementById('password').value;
+                    await login(email, password);
+                });
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        // console.log('User is logged in:', user.email);
+                        localStorage.setItem('userLoggedIn', 'true'); // Update login status
+                        document.getElementById('login').style.display = 'none';
+                    } else {
+                        // console.log('No user is logged in');
+                        localStorage.setItem('userLoggedIn', 'false'); // Update login status
+                        document.getElementById('login').style.display = 'none'; // Show login box if no user is logged in
+                    }
+                });
+            });
+
+
+        </script> -->
+
+</body>
+
+</html>
