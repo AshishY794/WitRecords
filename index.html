@@ -250,55 +250,12 @@
       window.location.href = url;
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const logo = document.querySelector('.logo');
-      const loginBox = document.getElementById('login');
-      
-      let timer;
-      const longPressDuration = 1000; // 1 second
-
-      logo.addEventListener('touchstart', (event) => {
-        timer = setTimeout(() => {
-          loginBox.style.display = 'block';
-        }, longPressDuration);
-      });
-
-      logo.addEventListener('touchend', (event) => {
-        clearTimeout(timer);
-      });
-
-      document.addEventListener('keydown', (event) => {
-        if (event.ctrlKey && event.key === 'a') {
-          event.preventDefault();
-          loginBox.style.display = loginBox.style.display === 'none' ? 'block' : 'none';
-        }
-      });
-
-      document.addEventListener('click', (event) => {
-        if (loginBox.style.display === 'block' && !loginBox.contains(event.target)) {
-          loginBox.style.display = 'none';
-        }
-      });
-
-      document.getElementById('loginButton').addEventListener('click', async () => {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-
-        try {
-          await signInWithEmailAndPassword(auth, email, password);
-          alert('Logged in successfully');
-          loginBox.style.display = 'none';
-        } catch (error) {
-          alert('Login failed: ' + error.message);
-        }
-      });
-    });
-  </script>
+   </script>
 
 
- <script type="module">
+<script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-app.js';
-  import { getFirestore, collection, doc, setDoc, getDoc, getDocs } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-firestore.js';
+  import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-firestore.js';
   import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-auth.js';
 
   const firebaseConfig = {
@@ -314,16 +271,65 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      console.log('User is logged in:', user.email);
+  async function login(email, password) {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      console.log('Logged in successfully');
       document.getElementById('login').style.display = 'none';
-    } else {
-      console.log('No user is logged in');
-      document.getElementById('login').style.display = 'none';
+    } catch (error) {
+      console.error('Login failed:', error.message);
+      alert('Login failed: ' + error.message);
     }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const logo = document.querySelector('.logo');
+    const loginBox = document.getElementById('login');
+    
+    let timer;
+    const longPressDuration = 1000; // 1 second
+
+    logo.addEventListener('touchstart', (event) => {
+      timer = setTimeout(() => {
+        loginBox.style.display = 'block';
+      }, longPressDuration);
+    });
+
+    logo.addEventListener('touchend', (event) => {
+      clearTimeout(timer);
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.ctrlKey && event.key === 'a') {
+        event.preventDefault();
+        loginBox.style.display = loginBox.style.display === 'none' ? 'block' : 'none';
+      }
+    });
+
+    document.addEventListener('click', (event) => {
+      if (loginBox.style.display === 'block' && !loginBox.contains(event.target)) {
+        loginBox.style.display = 'none';
+      }
+    });
+
+    document.getElementById('loginButton').addEventListener('click', async () => {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      await login(email, password);
+    });
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log('User is logged in:', user.email);
+        document.getElementById('login').style.display = 'none';
+      } else {
+        console.log('No user is logged in');
+        document.getElementById('login').style.display = 'block'; // Show login if no user
+      }
+    });
   });
 </script>
+
 </body>
 
 </html>
