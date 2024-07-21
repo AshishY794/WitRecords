@@ -97,6 +97,37 @@
       color: #333;
       margin: 0;
     }
+
+    #login {
+      display: none;
+      /* Initially hidden */
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 20px;
+      background-color: white;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      z-index: 1001;
+    }
+
+    #login h3 {
+      margin: 0 0 10px;
+    }
+
+    #login input {
+      margin-bottom: 10px;
+      padding: 8px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    #login button {
+      padding: 8px;
+      width: 100%;
+      box-sizing: border-box;
+    }
   </style>
 </head>
 
@@ -143,7 +174,6 @@
       </div>
     </div>
 
-
     <!-- Savita Section -->
     <div class="section" onclick="navigateTo('Components/savitadirec.html')"
       style="background-image: url('Components/Images/Designer.png');">
@@ -153,8 +183,7 @@
       </div>
     </div>
 
-
-    <!-- Tested PCb Section -->
+    <!-- Tested PCB Section -->
     <div class="section" onclick="navigateTo('Components/testedpcbs.html')"
       style="background-image: url('Components/Images/ssvi.png');">
       <div class="section-content">
@@ -162,8 +191,6 @@
         <p>Click here to view or manage Tested PCB Records data.</p>
       </div>
     </div>
-
-
 
     <!-- Component Record Section -->
     <div class="section" onclick="navigateTo('Components/componentsrecord.html')"
@@ -173,7 +200,6 @@
         <p>Click here to manage component records.</p>
       </div>
     </div>
-
 
     <!-- BOM Record Section -->
     <div class="section" onclick="navigateTo('Components/BOM.html')"
@@ -193,7 +219,6 @@
       </div>
     </div>
 
-
     <!-- Summery Record Section -->
     <div class="section" onclick="navigateTo('Components/summery.html')"
       style="background-image: url('Components/Images/summery.png');">
@@ -203,8 +228,7 @@
       </div>
     </div>
 
-
-    <!-- Blox Counter  Section -->
+    <!-- Blox Counter Section -->
     <div class="section" onclick="navigateTo('Components/bloxChecker.html')"
       style="background-image: url('Components/Images/BloxChecker.png');">
       <div class="section-content">
@@ -212,15 +236,94 @@
         <p>Check Required Blox Quentity From Kit Quentity.</p>
       </div>
     </div>
+  </div>
 
-
+  <div id="login">
+    <h3>Login</h3>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button id="loginButton">Login</button>
   </div>
 
   <script>
     function navigateTo(url) {
       window.location.href = url;
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const logo = document.querySelector('.logo');
+      const loginBox = document.getElementById('login');
+      
+      let timer;
+      const longPressDuration = 1000; // 1 second
+
+      logo.addEventListener('touchstart', (event) => {
+        timer = setTimeout(() => {
+          loginBox.style.display = 'block';
+        }, longPressDuration);
+      });
+
+      logo.addEventListener('touchend', (event) => {
+        clearTimeout(timer);
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.ctrlKey && event.key === 'a') {
+          event.preventDefault();
+          loginBox.style.display = loginBox.style.display === 'none' ? 'block' : 'none';
+        }
+      });
+
+      document.addEventListener('click', (event) => {
+        if (loginBox.style.display === 'block' && !loginBox.contains(event.target)) {
+          loginBox.style.display = 'none';
+        }
+      });
+
+      document.getElementById('loginButton').addEventListener('click', async () => {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        try {
+          await signInWithEmailAndPassword(auth, email, password);
+          alert('Logged in successfully');
+          loginBox.style.display = 'none';
+        } catch (error) {
+          alert('Login failed: ' + error.message);
+        }
+      });
+    });
   </script>
+
+
+ <script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-app.js';
+  import { getFirestore, collection, doc, setDoc, getDoc, getDocs } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-firestore.js';
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-auth.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC0jbQgXGYAvX2znLQLflVfXUjREwl3JyY",
+    authDomain: "officetest-92e0d.firebaseapp.com",
+    projectId: "officetest-92e0d",
+    storageBucket: "officetest-92e0d.appspot.com",
+    messagingSenderId: "435215452631",
+    appId: "1:435215452631:web:75cd4ea4fb4d07b65be392"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      console.log('User is logged in:', user.email);
+      document.getElementById('login').style.display = 'none';
+    } else {
+      console.log('No user is logged in');
+      document.getElementById('login').style.display = 'none';
+    }
+  });
+</script>
 </body>
 
 </html>

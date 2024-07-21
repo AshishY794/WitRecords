@@ -228,8 +228,8 @@
 
             // Replace this with your actual blox names data source
             const bloxNames = [
-                'Power','Power USB', 'Lamp', 'Buzzer', 'Invert', 'Dark', 'Distance', 'IR', 'Motor Driver' , 'Motor Driver 2Pin',
-                'Wire Tap','Wire Tap A', 'Button', 'AI', 'Wifi Clip V1', 'Wifi Clip V2', 'Servo', 'Logic Gate',
+                'Power', 'Power USB', 'Lamp', 'Buzzer', 'Invert', 'Dark', 'Distance', 'IR', 'Motor Driver', 'Motor Driver 2Pin',
+                'Wire Tap', 'Wire Tap A', 'Button', 'AI', 'Wifi Clip V1', 'Wifi Clip V2', 'Servo', 'Logic Gate',
                 'Toggle', 'Touch', 'Laser', 'Solar', 'Heat', 'New TX-RX', 'Old TX-RX', 'Magnet',
                 'Record And Repeat', 'AI Chat', 'Clap', 'Tongee', 'Moisture'
             ];
@@ -431,25 +431,48 @@
         }
 
 
-        // Function to populate dropdown with saved dates
         async function populateDropdown() {
             const dropdown = document.getElementById('dateDropdown');
             dropdown.innerHTML = ""; // Clear existing options
 
             try {
                 const querySnapshot = await getDocs(collection(db, 'TestedData'));
+                const dates = [];
+
+                // Collect all dates
                 querySnapshot.forEach((doc) => {
-                    const date = doc.id;
+                    dates.push(doc.id);
+                });
+
+                // Sort dates in ascending order (oldest first)
+                dates.sort((a, b) => {
+                    const dateA = new Date(a.replaceAll('_', '/'));
+                    const dateB = new Date(b.replaceAll('_', '/'));
+                    return dateA - dateB;
+                });
+
+                // Populate dropdown with sorted dates and select the newest date
+                dates.forEach((date, index) => {
                     const option = document.createElement('option');
                     option.value = date;
                     option.textContent = date.replaceAll('_', '/'); // Format date for display
                     dropdown.appendChild(option);
                 });
+
+                // Highlight the newest date
+                if (dates.length > 0) {
+                    dropdown.options[dropdown.options.length - 1].selected = true;
+                    dropdown.options[dropdown.options.length - 1].style.fontWeight = "bold"; // Highlight the newest date
+                }
             } catch (error) {
                 console.error("Error getting documents: ", error);
                 alert("Failed to retrieve saved dates from Firestore.");
             }
         }
+
+        // Call the function to populate the dropdown when the page loads
+        // populateDropdown();
+
 
         // Function to display data for selected date
         async function displaySelectedDate() {
@@ -749,8 +772,8 @@
 
                 // Define the preferred order of blox names
                 const preferredOrder = [
-                    "Power",'Power USB', "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR",
-                    "Motor Driver" , 'Motor Driver 2Pin', "Wire Tap", 'Wire Tap A', "Button", "AI", "Wifi Clip V1", "wifi Clip V2", "Servo", "Logic Gate"
+                    "Power", 'Power USB', "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR",
+                    "Motor Driver", 'Motor Driver 2Pin', "Wire Tap", 'Wire Tap A', "Button", "AI", "Wifi Clip V1", "wifi Clip V2", "Servo", "Logic Gate"
                 ];
 
                 // Sort allDataTT to place preferred blox names first, then alphabetical
@@ -800,266 +823,266 @@
 
 
         let hotInstanceT;
-let hotInstanceTT;
-let allDataT = [];
-let allDataTCopy = []; // Define allDataTCopy to store original data
+        let hotInstanceTT;
+        let allDataT = [];
+        let allDataTCopy = []; // Define allDataTCopy to store original data
 
-async function initializeSpreadsheetT() {
-    const container = document.getElementById('spreadsheetWrapperTested');
+        async function initializeSpreadsheetT() {
+            const container = document.getElementById('spreadsheetWrapperTested');
 
-    // Destroy any existing Handsontable instances if they exist
-    if (hotInstanceT) {
-        hotInstanceT.destroy();
-    }
+            // Destroy any existing Handsontable instances if they exist
+            if (hotInstanceT) {
+                hotInstanceT.destroy();
+            }
 
-    try {
-        // Fetch data from 'TestedData' collection
-        const querySnapshot = await getDocs(collection(db, 'TestedData'));
-        const bloxData = {};
+            try {
+                // Fetch data from 'TestedData' collection
+                const querySnapshot = await getDocs(collection(db, 'TestedData'));
+                const bloxData = {};
 
-        // Process data from 'TestedData'
-        querySnapshot.forEach((doc) => {
-            const data = doc.data().data;
-            data.forEach(row => {
-                if (row.bloxName) {
-                    const quantity = row.Quentity != null ? row.Quentity : row.NotWorking || 0;
-                    const working = row.Working != null ? row.Working : 0;
+                // Process data from 'TestedData'
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data().data;
+                    data.forEach(row => {
+                        if (row.bloxName) {
+                            const quantity = row.Quentity != null ? row.Quentity : row.NotWorking || 0;
+                            const working = row.Working != null ? row.Working : 0;
 
-                    if (!bloxData[row.bloxName]) {
-                        bloxData[row.bloxName] = {
-                            bloxName: row.bloxName,
-                            Quentity: quantity,
-                            NotWorking: quantity - working,
-                            Working: working
-                        };
+                            if (!bloxData[row.bloxName]) {
+                                bloxData[row.bloxName] = {
+                                    bloxName: row.bloxName,
+                                    Quentity: quantity,
+                                    NotWorking: quantity - working,
+                                    Working: working
+                                };
+                            } else {
+                                bloxData[row.bloxName].Quentity += quantity;
+                                bloxData[row.bloxName].NotWorking += quantity - working;
+                                bloxData[row.bloxName].Working += working;
+                            }
+                        }
+                    });
+                });
+
+                // Convert bloxData to an array of objects
+                allDataT = Object.values(bloxData);
+                // Make a deep copy of allDataT to allDataTCopy
+                allDataTCopy = JSON.parse(JSON.stringify(allDataT));
+
+                // Define the preferred order of blox names
+                const preferredOrder = [
+                    "Power", "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR",
+                    "Motor Driver", "Wire Tap", "Button", "AI", "Wifi Clip V1", "Wifi Clip V2", "Servo", "Logic Gate"
+                ];
+
+                // Sort allDataT to place preferred blox names first, then alphabetical
+                allDataT.sort((a, b) => {
+                    const indexA = preferredOrder.indexOf(a.bloxName);
+                    const indexB = preferredOrder.indexOf(b.bloxName);
+                    if (indexA === -1 && indexB === -1) {
+                        // Both are not in preferredOrder, sort alphabetically
+                        return a.bloxName.localeCompare(b.bloxName);
+                    } else if (indexA === -1) {
+                        // Only b is in preferredOrder
+                        return 1;
+                    } else if (indexB === -1) {
+                        // Only a is in preferredOrder
+                        return -1;
                     } else {
-                        bloxData[row.bloxName].Quentity += quantity;
-                        bloxData[row.bloxName].NotWorking += quantity - working;
-                        bloxData[row.bloxName].Working += working;
+                        // Both are in preferredOrder, compare their indices
+                        return indexA - indexB;
+                    }
+                });
+
+                // Initialize Handsontable with fetched data for main table
+                hotInstanceT = new Handsontable(container, {
+                    data: allDataT, // Use filtered and adjusted data
+                    rowHeaders: true,
+                    colHeaders: ['Blox Name', 'Quentity', 'Not Working', 'Working'],
+                    columns: [
+                        { data: 'bloxName' },
+                        { data: 'Quentity', type: 'numeric' },
+                        { data: 'NotWorking', type: 'numeric' },
+                        { data: 'Working', type: 'numeric' }
+                    ],
+                    minSpareRows: 1, // Allow adding new rows
+                    readOnly: true, // Make the spreadsheet view-only
+                    stretchH: 'all',
+                    height: 400,
+                    licenseKey: 'non-commercial-and-evaluation'
+                });
+
+                // Populate dropdown with PCB names
+                populateDropdownTF(allDataT);
+
+                // Add event listener for row selection to display graph
+                container.addEventListener('click', function (event) {
+                    const row = hotInstanceT.getSelectedLast();
+                    if (row) {
+                        const rowData = hotInstanceT.getDataAtRow(row[0]);
+                        displayCircleGraph({
+                            bloxName: rowData[0],
+                            Quentity: rowData[1],
+                            NotWorking: rowData[2],
+                            Working: rowData[3]
+                        });
+                    }
+                });
+
+                // Fetch grades data and update the quantities in allDataT
+                await fetchAndProcessGrades();
+
+                // Initialize the second Handsontable with PCB name and working quantity
+                initializeSecondSpreadsheet(allDataT, aggregatedData);
+
+            } catch (error) {
+                console.error("Error getting documents: ", error);
+            }
+        }
+
+        // Function to fetch and process grades data
+        async function fetchAndProcessGrades() {
+            try {
+                const gradesSnapshot = await getDocs(collection(db, 'grades'));
+                const gradesData = [];
+
+                gradesSnapshot.forEach(doc => {
+                    const docData = doc.data();
+                    if (docData.pcbs && Array.isArray(docData.pcbs)) {
+                        docData.pcbs.forEach(({ pcb, quantity }) => {
+                            gradesData.push({ pcb, quantity });
+                        });
+                    }
+                });
+
+                console.log('Grades Data:', gradesData);
+
+                // Aggregate total quantities for each PCB
+                const aggregatedData = gradesData.reduce((acc, { pcb, quantity }) => {
+                    if (!acc[pcb]) {
+                        acc[pcb] = 0;
+                    }
+                    acc[pcb] += quantity;
+                    return acc;
+                }, {});
+
+                console.log('Aggregated Data:', aggregatedData);
+
+                // Store aggregatedData in a global variable to be used in initializeSecondSpreadsheet
+                window.aggregatedData = aggregatedData;
+
+            } catch (error) {
+                console.error("Error fetching grades data: ", error);
+            }
+        }
+
+        // Function to initialize the second Handsontable for PCB name and working quantity
+        function initializeSecondSpreadsheet(data) {
+            const containerTT = document.getElementById('spreadsheetWrapperTestedtt');
+
+            // Destroy any existing Handsontable instances if they exist
+            if (hotInstanceTT) {
+                hotInstanceTT.destroy();
+            }
+
+            console.log(data);
+            console.log(window.aggregatedData);
+
+            // Prepare the data for the second Handsontable with aggregated adjustments
+            const finalData = data
+                .filter(item => item.bloxName) // Filter out any items with null or undefined bloxName
+                .map(item => {
+                    const aggregatedValue = window.aggregatedData[item.bloxName] || 0; // Use default value if not found
+                    const adjustedWorking = item.Working - aggregatedValue;
+                    return {
+                        bloxName: item.bloxName,
+                        Working: adjustedWorking < 0 ? 0 : adjustedWorking
+                    };
+                });
+
+            console.log('Final Data:', finalData);
+
+            // Initialize Handsontable with PCB name and working quantity
+            hotInstanceTT = new Handsontable(containerTT, {
+                data: finalData,
+                rowHeaders: true,
+                colHeaders: ['Blox Name', 'We Have'],
+                columns: [
+                    { data: 'bloxName' },
+                    { data: 'Working', type: 'numeric' }
+                ],
+                minSpareRows: 1, // Allow adding new rows
+                readOnly: true, // Make the spreadsheet view-only
+                stretchH: 'all',
+                height: 400,
+                licenseKey: 'non-commercial-and-evaluation'
+            });
+        }
+
+        // Populate dropdown with PCB names
+        function populateDropdownTF(data) {
+            const dropdown = document.getElementById('pcbDropdown');
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.bloxName;
+                option.text = item.bloxName;
+                dropdown.appendChild(option);
+            });
+
+            dropdown.addEventListener('change', (event) => {
+                const selectedPCB = event.target.value;
+                if (selectedPCB) {
+                    displayCircleGraphByName(selectedPCB);
+                }
+            });
+        }
+
+        // Display circle graph for selected PCB by name
+        function displayCircleGraphByName(pcbName) {
+            const pcbData = allDataT.find(item => item.bloxName === pcbName);
+            if (!pcbData) return;
+            displayCircleGraph(pcbData);
+        }
+
+        // Display circle graph for selected PCB data
+        function displayCircleGraph(pcbData) {
+            const { bloxName, Quentity, NotWorking, Working } = pcbData;
+            const ctx = document.getElementById('circleGraph').getContext('2d');
+            document.getElementById('pcbHeading').innerText = `PCB Name: ${bloxName}, Total Quantity: ${Quentity}`;
+
+            // Find the original data before grades processing
+            const originalData = allDataTCopy.find(item => item.bloxName === bloxName);
+
+            if (!originalData) return;
+
+            if (window.myChart) {
+                window.myChart.destroy();
+            }
+
+            window.myChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Working', 'Not Working'],
+                    datasets: [{
+                        label: 'PCB Status',
+                        data: [originalData.Working, originalData.NotWorking], // Use original data
+                        backgroundColor: ['#36a2eb', '#ff6384']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
                     }
                 }
             });
-        });
-
-        // Convert bloxData to an array of objects
-        allDataT = Object.values(bloxData);
-        // Make a deep copy of allDataT to allDataTCopy
-        allDataTCopy = JSON.parse(JSON.stringify(allDataT));
-
-        // Define the preferred order of blox names
-        const preferredOrder = [
-            "Power", "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR",
-            "Motor Driver", "Wire Tap", "Button", "AI", "Wifi Clip V1", "Wifi Clip V2", "Servo", "Logic Gate"
-        ];
-
-        // Sort allDataT to place preferred blox names first, then alphabetical
-        allDataT.sort((a, b) => {
-            const indexA = preferredOrder.indexOf(a.bloxName);
-            const indexB = preferredOrder.indexOf(b.bloxName);
-            if (indexA === -1 && indexB === -1) {
-                // Both are not in preferredOrder, sort alphabetically
-                return a.bloxName.localeCompare(b.bloxName);
-            } else if (indexA === -1) {
-                // Only b is in preferredOrder
-                return 1;
-            } else if (indexB === -1) {
-                // Only a is in preferredOrder
-                return -1;
-            } else {
-                // Both are in preferredOrder, compare their indices
-                return indexA - indexB;
-            }
-        });
-
-        // Initialize Handsontable with fetched data for main table
-        hotInstanceT = new Handsontable(container, {
-            data: allDataT, // Use filtered and adjusted data
-            rowHeaders: true,
-            colHeaders: ['Blox Name', 'Quentity', 'Not Working', 'Working'],
-            columns: [
-                { data: 'bloxName' },
-                { data: 'Quentity', type: 'numeric' },
-                { data: 'NotWorking', type: 'numeric' },
-                { data: 'Working', type: 'numeric' }
-            ],
-            minSpareRows: 1, // Allow adding new rows
-            readOnly: true, // Make the spreadsheet view-only
-            stretchH: 'all',
-            height: 400,
-            licenseKey: 'non-commercial-and-evaluation'
-        });
-
-        // Populate dropdown with PCB names
-        populateDropdownTF(allDataT);
-
-        // Add event listener for row selection to display graph
-        container.addEventListener('click', function (event) {
-            const row = hotInstanceT.getSelectedLast();
-            if (row) {
-                const rowData = hotInstanceT.getDataAtRow(row[0]);
-                displayCircleGraph({
-                    bloxName: rowData[0],
-                    Quentity: rowData[1],
-                    NotWorking: rowData[2],
-                    Working: rowData[3]
-                });
-            }
-        });
-
-        // Fetch grades data and update the quantities in allDataT
-        await fetchAndProcessGrades();
-
-        // Initialize the second Handsontable with PCB name and working quantity
-        initializeSecondSpreadsheet(allDataT, aggregatedData);
-
-    } catch (error) {
-        console.error("Error getting documents: ", error);
-    }
-}
-
-// Function to fetch and process grades data
-async function fetchAndProcessGrades() {
-    try {
-        const gradesSnapshot = await getDocs(collection(db, 'grades'));
-        const gradesData = [];
-
-        gradesSnapshot.forEach(doc => {
-            const docData = doc.data();
-            if (docData.pcbs && Array.isArray(docData.pcbs)) {
-                docData.pcbs.forEach(({ pcb, quantity }) => {
-                    gradesData.push({ pcb, quantity });
-                });
-            }
-        });
-
-        console.log('Grades Data:', gradesData);
-
-        // Aggregate total quantities for each PCB
-        const aggregatedData = gradesData.reduce((acc, { pcb, quantity }) => {
-            if (!acc[pcb]) {
-                acc[pcb] = 0;
-            }
-            acc[pcb] += quantity;
-            return acc;
-        }, {});
-
-        console.log('Aggregated Data:', aggregatedData);
-
-        // Store aggregatedData in a global variable to be used in initializeSecondSpreadsheet
-        window.aggregatedData = aggregatedData;
-
-    } catch (error) {
-        console.error("Error fetching grades data: ", error);
-    }
-}
-
-// Function to initialize the second Handsontable for PCB name and working quantity
-function initializeSecondSpreadsheet(data) {
-    const containerTT = document.getElementById('spreadsheetWrapperTestedtt');
-
-    // Destroy any existing Handsontable instances if they exist
-    if (hotInstanceTT) {
-        hotInstanceTT.destroy();
-    }
-
-    console.log(data);
-    console.log(window.aggregatedData);
-
-    // Prepare the data for the second Handsontable with aggregated adjustments
-    const finalData = data
-        .filter(item => item.bloxName) // Filter out any items with null or undefined bloxName
-        .map(item => {
-            const aggregatedValue = window.aggregatedData[item.bloxName] || 0; // Use default value if not found
-            const adjustedWorking = item.Working - aggregatedValue;
-            return {
-                bloxName: item.bloxName,
-                Working: adjustedWorking < 0 ? 0 : adjustedWorking
-            };
-        });
-
-    console.log('Final Data:', finalData);
-
-    // Initialize Handsontable with PCB name and working quantity
-    hotInstanceTT = new Handsontable(containerTT, {
-        data: finalData,
-        rowHeaders: true,
-        colHeaders: ['Blox Name', 'We Have'],
-        columns: [
-            { data: 'bloxName' },
-            { data: 'Working', type: 'numeric' }
-        ],
-        minSpareRows: 1, // Allow adding new rows
-        readOnly: true, // Make the spreadsheet view-only
-        stretchH: 'all',
-        height: 400,
-        licenseKey: 'non-commercial-and-evaluation'
-    });
-}
-
-// Populate dropdown with PCB names
-function populateDropdownTF(data) {
-    const dropdown = document.getElementById('pcbDropdown');
-    data.forEach(item => {
-        const option = document.createElement('option');
-        option.value = item.bloxName;
-        option.text = item.bloxName;
-        dropdown.appendChild(option);
-    });
-
-    dropdown.addEventListener('change', (event) => {
-        const selectedPCB = event.target.value;
-        if (selectedPCB) {
-            displayCircleGraphByName(selectedPCB);
         }
-    });
-}
 
-// Display circle graph for selected PCB by name
-function displayCircleGraphByName(pcbName) {
-    const pcbData = allDataT.find(item => item.bloxName === pcbName);
-    if (!pcbData) return;
-    displayCircleGraph(pcbData);
-}
-
-// Display circle graph for selected PCB data
-function displayCircleGraph(pcbData) {
-    const { bloxName, Quentity, NotWorking, Working } = pcbData;
-    const ctx = document.getElementById('circleGraph').getContext('2d');
-    document.getElementById('pcbHeading').innerText = `PCB Name: ${bloxName}, Total Quantity: ${Quentity}`;
-
-    // Find the original data before grades processing
-    const originalData = allDataTCopy.find(item => item.bloxName === bloxName);
-
-    if (!originalData) return;
-
-    if (window.myChart) {
-        window.myChart.destroy();
-    }
-
-    window.myChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Working', 'Not Working'],
-            datasets: [{
-                label: 'PCB Status',
-                data: [originalData.Working, originalData.NotWorking], // Use original data
-                backgroundColor: ['#36a2eb', '#ff6384']
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-}
-
-// Initialize the Handsontable instance and dropdown
-initializeSpreadsheetT();
+        // Initialize the Handsontable instance and dropdown
+        initializeSpreadsheetT();
 
 
 
@@ -1101,7 +1124,7 @@ initializeSpreadsheetT();
 
             // Define the list of blox names you want to check
             const bloxNamesToCheck = [
-                'Power','Power USB', 'Lamp', 'Buzzer', 'Invert', 'Dark', 'Distance', 'IR', 'Motor Driver' , 'Motor Driver',
+                'Power', 'Power USB', 'Lamp', 'Buzzer', 'Invert', 'Dark', 'Distance', 'IR', 'Motor Driver', 'Motor Driver',
                 'Wire Tap', 'Wire Tap A', 'Button', 'AI', 'Wifi Clip V1', 'wifi Clip V2', 'Servo', 'Logic Gate',
                 'Toggle', 'Touch', 'Laser', 'Solar', 'Heat', 'New TX-RX', 'Old TX-RX', 'Magnet',
                 'Record And Repete', 'AI Chat', 'Clap', 'Tongee', 'Blix Power', 'Blix Led', 'Blix Buzzer', 'Blix Not', 'Blix Motor Driver', 'Blix Distance', 'Blix IR', 'Blix Switch'

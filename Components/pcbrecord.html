@@ -387,27 +387,48 @@
 
 
 
-
-
-    // Function to populate dropdown with saved dates
     async function populateDropdown() {
-      const dropdown = document.getElementById('dateDropdown');
-      dropdown.innerHTML = ""; // Clear existing options
+  const dropdown = document.getElementById('dateDropdown');
+  dropdown.innerHTML = ""; // Clear existing options
 
-      try {
-        const querySnapshot = await getDocs(collection(db, 'sheetData'));
-        querySnapshot.forEach((doc) => {
-          const date = doc.id;
-          const option = document.createElement('option');
-          option.value = date;
-          option.textContent = date.replaceAll('_', '/'); // Format date for display
-          dropdown.appendChild(option);
-        });
-      } catch (error) {
-        console.error("Error getting documents: ", error);
-        alert("Failed to retrieve saved dates from Firestore.");
+  try {
+    const querySnapshot = await getDocs(collection(db, 'sheetData'));
+    const dates = [];
+
+    // Collect all dates
+    querySnapshot.forEach((doc) => {
+      dates.push(doc.id);
+    });
+
+    // Sort dates in descending order (newest first)
+    dates.sort((a, b) => {
+      const dateA = new Date(a.replaceAll('_', '/'));
+      const dateB = new Date(b.replaceAll('_', '/'));
+      return dateB - dateA;
+    });
+
+    // Populate dropdown with sorted dates
+    dates.forEach((date, index) => {
+      const option = document.createElement('option');
+      option.value = date;
+      option.textContent = date.replaceAll('_', '/'); // Format date for display
+
+      if (index === 0) {
+        option.selected = true; // Select the newest date
+        option.style.fontWeight = "bold"; // Highlight the newest date
       }
-    }
+
+      dropdown.appendChild(option);
+    });
+  } catch (error) {
+    console.error("Error getting documents: ", error);
+    alert("Failed to retrieve saved dates from Firestore.");
+  }
+}
+
+// Call the function to populate the dropdown when the page loads
+// populateDropdown();
+
 
 
 
