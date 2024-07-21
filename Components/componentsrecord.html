@@ -104,6 +104,7 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-app.js';
         import { getFirestore, collection, doc, setDoc, getDoc, getDocs } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-firestore.js';
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-auth.js';
 
         // Firebase configuration
         const firebaseConfig = {
@@ -118,6 +119,8 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
+
 
         // // Declare global variables
         // let hot; // Handsontable instance
@@ -463,7 +466,7 @@
             dateFormat: "d/m/Y", // Format: day/month/year
             onChange: function (selectedDates, dateStr, instance) {
                 selectedDate = dateStr.replaceAll('/', '_'); // Update selectedDate variable with underscores instead of slashes
-                console.log("Selected date:", selectedDate);
+                // console.log("Selected date:", selectedDate);
             }
         });
 

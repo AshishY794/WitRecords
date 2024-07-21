@@ -360,6 +360,7 @@
 
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-app.js';
         import { getFirestore, collection, doc, writeBatch, getDocs, query, orderBy, limit, startAfter } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-firestore.js';
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-auth.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyC0jbQgXGYAvX2znLQLflVfXUjREwl3JyY",
@@ -372,6 +373,8 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
+
         let hotInstance; // Handsontable instance for first dropdown
         let allData = []; // Store all data for first dropdown here
 

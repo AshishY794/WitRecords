@@ -144,6 +144,7 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-app.js';
         import { getFirestore, collection, doc, setDoc, getDoc, getDocs } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-firestore.js';
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-auth.js';
 
         // Firebase configuration
         const firebaseConfig = {
@@ -159,6 +160,7 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
         // // Declare global variables
         // let hot; // Handsontable instance
@@ -523,7 +525,7 @@
             dateFormat: "d/m/Y", // Format: day/month/year
             onChange: function (selectedDates, dateStr, instance) {
                 selectedDate = dateStr.replaceAll('/', '_'); // Update selectedDate variable with underscores instead of slashes
-                console.log("Selected date:", selectedDate);
+                // console.log("Selected date:", selectedDate);
             }
         });
 
@@ -955,7 +957,7 @@
                     }
                 });
 
-                console.log('Grades Data:', gradesData);
+                // console.log('Grades Data:', gradesData);
 
                 // Aggregate total quantities for each PCB
                 const aggregatedData = gradesData.reduce((acc, { pcb, quantity }) => {
@@ -966,13 +968,13 @@
                     return acc;
                 }, {});
 
-                console.log('Aggregated Data:', aggregatedData);
+                // console.log('Aggregated Data:', aggregatedData);
 
                 // Store aggregatedData in a global variable to be used in initializeSecondSpreadsheet
                 window.aggregatedData = aggregatedData;
 
             } catch (error) {
-                console.error("Error fetching grades data: ", error);
+                // console.error("Error fetching grades data: ", error);
             }
         }
 
@@ -985,8 +987,8 @@
                 hotInstanceTT.destroy();
             }
 
-            console.log(data);
-            console.log(window.aggregatedData);
+            // console.log(data);
+            // console.log(window.aggregatedData);
 
             // Prepare the data for the second Handsontable with aggregated adjustments
             const finalData = data
@@ -1000,7 +1002,7 @@
                     };
                 });
 
-            console.log('Final Data:', finalData);
+            // console.log('Final Data:', finalData);
 
             // Initialize Handsontable with PCB name and working quantity
             hotInstanceTT = new Handsontable(containerTT, {

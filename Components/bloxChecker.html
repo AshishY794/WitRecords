@@ -184,6 +184,7 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-app.js';
         import { getFirestore, collection, addDoc, getDocs, doc, getDoc } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-firestore.js';
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-auth.js';
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -195,12 +196,33 @@
             appId: "1:435215452631:web:75cd4ea4fb4d07b65be392"
         };
 
-
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
-        document.addEventListener("DOMContentLoaded", function () {
+    //     // Check authentication state
+    //    // Check authentication state
+    // onAuthStateChanged(auth, async user => {
+    //     if (user) {
+    //         console.log('User is signed in:', user);
+
+    //         try {
+    //             // Fetch data from Firestore
+    //             const querySnapshot = await getDocs(collection(db, 'your-collection-name'));
+    //             querySnapshot.forEach(doc => {
+    //                 console.log(doc.id, ' => ', doc.data());
+    //             });
+    //         } catch (error) {
+    //             console.error('Error loading data:', error);
+    //         }
+
+    //     } else {
+    //         console.log('No user is signed in');
+    //     }
+    // });
+    
+    document.addEventListener("DOMContentLoaded", function () {
             const addDataButton = document.getElementById("addDataButton");
             const formContainer = document.getElementById("formContainer");
             const gradeForm = document.getElementById("gradeForm");

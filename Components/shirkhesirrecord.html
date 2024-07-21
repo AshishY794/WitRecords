@@ -308,6 +308,8 @@
         // Import Firebase modules
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-app.js';
         import { getFirestore, collection, doc, writeBatch, getDocs, query, orderBy, limit, startAfter, getDoc } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-firestore.js';
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.5/firebase-auth.js';
+
 
         const firebaseConfig = {
             apiKey: "AIzaSyC0jbQgXGYAvX2znLQLflVfXUjREwl3JyY",
@@ -318,6 +320,7 @@
             appId: "1:435215452631:web:75cd4ea4fb4d07b65be392"
         };
 
+        
         // Array of PCB names
         const pcbNames = [
             "Power",'Power USB', "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR", "Motor Driver", "Wire Tap", "Button",
@@ -490,6 +493,8 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
+
         let hotInstance; // Handsontable instance for first dropdown
         let hotInstance2; // Handsontable instance for second dropdown
         let allData = []; // Store all data for first dropdown here
@@ -807,7 +812,7 @@
 
                 await Promise.all(fetchDataPromises);
 
-                console.log('Retrieved Data:', pcbDataMap); // Log the retrieved data
+                // console.log('Retrieved Data:', pcbDataMap); // Log the retrieved data
             } catch (error) {
                 console.error('Error retrieving data:', error);
                 container.innerHTML = '<p>Error loading data. Please try again later.</p>';

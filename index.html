@@ -275,7 +275,7 @@ const db = getFirestore(app);
 async function login(email, password) {
   try {
     await signInWithEmailAndPassword(auth, email, password);
-    console.log('Logged in successfully');
+    // console.log('Logged in successfully');
     localStorage.setItem('userLoggedIn', 'true'); // Store login status
     // window.location.href = 'https://witrecords.vercel.app/Components/index.html'; // Redirect to home page
   } catch (error) {
@@ -322,11 +322,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      console.log('User is logged in:', user.email);
+      // console.log('User is logged in:', user.email);
       localStorage.setItem('userLoggedIn', 'true'); // Update login status
       document.getElementById('login').style.display = 'none';
     } else {
-      console.log('No user is logged in');
+      // console.log('No user is logged in');
       localStorage.setItem('userLoggedIn', 'false'); // Update login status
       document.getElementById('login').style.display = 'none'; // Show login box if no user is logged in
     }
