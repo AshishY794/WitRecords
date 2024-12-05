@@ -387,26 +387,84 @@
 
 
 
-        // Function to populate dropdown with saved dates
-        async function populateDropdown() {
-            const dropdown = document.getElementById('dateDropdown');
-            dropdown.innerHTML = ""; // Clear existing options
+      // Function to populate dropdown with saved dates
+async function populateDropdown() {
+  const dropdown = document.getElementById('dateDropdown');
+  dropdown.innerHTML = ""; // Clear existing options
 
-            try {
-                const querySnapshot = await getDocs(collection(db, 'savitadigivenpcb'));
-                querySnapshot.forEach((doc) => {
-                    const date = doc.id;
-                    const option = document.createElement('option');
-                    option.value = date;
-                    option.textContent = date.replaceAll('_', '/'); // Format date for display
-                    dropdown.appendChild(option);
-                });
-            } catch (error) {
-                console.error("Error getting documents: ", error);
-                alert("Failed to retrieve saved dates from Firestore.");
-            }
+  try {
+    const querySnapshot = await getDocs(collection(db, 'savitadigivenpcb'));
+    const dates = {};
+
+    // Collect all dates and group them by month
+    querySnapshot.forEach((doc) => {
+      const date = doc.id; // Document ID as the date (DD_MM_YYYY)
+      const [day, month, year] = date.split("_");
+
+      // Create a key for each month (e.g., "January 2024")
+      const monthYear = `${month}-${year}`;
+
+      if (!dates[monthYear]) {
+        dates[monthYear] = [];
+      }
+      dates[monthYear].push({ day, fullDate: date });
+    });
+
+    // Sort months in reverse order (most recent first)
+    const sortedMonths = Object.keys(dates).sort((a, b) => {
+      const [monthA, yearA] = a.split("-");
+      const [monthB, yearB] = b.split("-");
+      return new Date(`${yearB}-${monthB}-01`) - new Date(`${yearA}-${monthA}-01`);
+    });
+
+    let mostRecentDate = null;
+
+    // Populate dropdown with sorted months and dates in reverse order
+    sortedMonths.forEach((monthYear) => {
+      const [month, year] = monthYear.split("-");
+      const monthName = new Date(`${year}-${month}-01`).toLocaleString('default', { month: 'long' });
+
+      // Create a group for the month
+      const monthGroup = document.createElement('optgroup');
+      monthGroup.label = `${monthName} ${year}`;
+      dropdown.appendChild(monthGroup);
+
+      // Sort dates within the month in reverse order (latest date first)
+      const sortedDates = dates[monthYear].sort((a, b) => {
+        const dateA = new Date(a.fullDate.replaceAll('_', '/'));
+        const dateB = new Date(b.fullDate.replaceAll('_', '/'));
+        return dateB - dateA; // Reverse chronological order
+      });
+
+      // Add dates under the corresponding month
+      sortedDates.forEach(({ day, fullDate }) => {
+        const option = document.createElement('option');
+        option.value = fullDate;
+        option.textContent = `${day}-${monthName}-${year}`;
+        monthGroup.appendChild(option);
+
+        // Keep track of the most recent date
+        if (!mostRecentDate || new Date(fullDate.replaceAll('_', '/')) > new Date(mostRecentDate.replaceAll('_', '/'))) {
+          mostRecentDate = fullDate;
         }
+      });
+    });
 
+    // Select the top-most date (the most recent date)
+    const options = dropdown.getElementsByTagName('option');
+    for (let option of options) {
+      if (option.value === mostRecentDate) {
+        option.selected = true;
+        option.style.fontWeight = "bold"; // Optionally, you can style the selected date
+        break;
+      }
+    }
+
+  } catch (error) {
+    console.error("Error getting documents: ", error);
+    alert("Failed to retrieve saved dates from Firestore.");
+  }
+}
 
 
 
