@@ -434,43 +434,81 @@
 
 
         async function populateDropdown() {
-            const dropdown = document.getElementById('dateDropdown');
-            dropdown.innerHTML = ""; // Clear existing options
+    const dropdown = document.getElementById('dateDropdown');
+    dropdown.innerHTML = ""; // Clear existing options
 
-            try {
-                const querySnapshot = await getDocs(collection(db, 'TestedData'));
-                const dates = [];
+    try {
+        const querySnapshot = await getDocs(collection(db, 'TestedData'));
+        const dates = {};
 
-                // Collect all dates
-                querySnapshot.forEach((doc) => {
-                    dates.push(doc.id);
-                });
+        // Collect all dates and group them by month
+        querySnapshot.forEach((doc) => {
+            const date = doc.id; // Document ID as the date (DD_MM_YYYY)
+            const [day, month, year] = date.split("_");
 
-                // Sort dates in ascending order (oldest first)
-                dates.sort((a, b) => {
-                    const dateA = new Date(a.replaceAll('_', '/'));
-                    const dateB = new Date(b.replaceAll('_', '/'));
-                    return dateA - dateB;
-                });
+            // Create a key for each month (e.g., "January 2024")
+            const monthYear = `${month}-${year}`;
 
-                // Populate dropdown with sorted dates and select the newest date
-                dates.forEach((date, index) => {
-                    const option = document.createElement('option');
-                    option.value = date;
-                    option.textContent = date.replaceAll('_', '/'); // Format date for display
-                    dropdown.appendChild(option);
-                });
-
-                // Highlight the newest date
-                if (dates.length > 0) {
-                    dropdown.options[dropdown.options.length - 1].selected = true;
-                    dropdown.options[dropdown.options.length - 1].style.fontWeight = "bold"; // Highlight the newest date
-                }
-            } catch (error) {
-                console.error("Error getting documents: ", error);
-                alert("Failed to retrieve saved dates from Firestore.");
+            if (!dates[monthYear]) {
+                dates[monthYear] = [];
             }
+            dates[monthYear].push({ day, fullDate: date });
+        });
+
+        // Sort months in reverse order (most recent first)
+        const sortedMonths = Object.keys(dates).sort((a, b) => {
+            const [monthA, yearA] = a.split("-");
+            const [monthB, yearB] = b.split("-");
+
+            // Sort by most recent month first, and reverse the month order
+            return new Date(`${yearB}-${monthB}-01`) - new Date(`${yearA}-${monthA}-01`);
+        });
+
+        let mostRecentDate = null;
+
+        // Populate dropdown with sorted months and dates in reverse order
+        sortedMonths.forEach((monthYear) => {
+            const [month, year] = monthYear.split("-");
+            const monthName = new Date(`${year}-${month}-01`).toLocaleString('default', { month: 'long' });
+
+            // Create a group for the month
+            const monthGroup = document.createElement('optgroup');
+            monthGroup.label = `${monthName} ${year}`;
+            dropdown.appendChild(monthGroup);
+
+            // Sort dates within the month in reverse order (latest date first)
+            const sortedDates = dates[monthYear].sort((a, b) => {
+                const dateA = new Date(a.fullDate.replaceAll('_', '/'));
+                const dateB = new Date(b.fullDate.replaceAll('_', '/'));
+                return dateB - dateA; // Reverse chronological order
+            });
+
+            // Add dates under the corresponding month
+            sortedDates.forEach(({ day, fullDate }) => {
+                const option = document.createElement('option');
+                option.value = fullDate;
+                option.textContent = `${day}-${monthName}-${year}`;
+                monthGroup.appendChild(option);
+
+                // Keep track of the most recent date
+                if (!mostRecentDate || new Date(fullDate.replaceAll('_', '/')) > new Date(mostRecentDate.replaceAll('_', '/'))) {
+                    mostRecentDate = fullDate;
+                }
+            });
+        });
+
+        // Select the topmost (most recent) date by default
+        const firstOption = dropdown.querySelector('option');
+        if (firstOption) {
+            firstOption.selected = true;
+            firstOption.style.fontWeight = "bold"; // Make the selected date bold
         }
+
+    } catch (error) {
+        console.error("Error getting documents: ", error);
+        alert("Failed to retrieve saved dates from Firestore.");
+    }
+}
 
         // Call the function to populate the dropdown when the page loads
         // populateDropdown();
@@ -1167,28 +1205,32 @@
             container.style.display = 'block'; // Display the spreadsheet container
         }
 
-        // // Event listener for when the DOM is fully loaded
-        // document.addEventListener('DOMContentLoaded', function () {
-        //     initializeSpreadsheet();
+        // Event listener for when the DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', function () {
+ 
 
-        //     // Event listener for Download CSV button
-        //     document.getElementById('csvDownloadBtn').addEventListener('click', convertToCSV);
-        // });
+            // Event listener for Download CSV button
+            document.getElementById('csvDownloadBtn').addEventListener('click', convertToCSV);
+        });
 
-        // Function to convert Handsontable data to CSV
-        function convertToCSV() {
-            const data = hotInstance.getData();
-            const csvContent = "data:text/csv;charset=utf-8,"
-                + data.map(row => row.join(",")).join("\n");
+// Function to convert Handsontable data to CSV
+function convertToCSV() {
+    const data = hotInstanceT.getData();
+    // Add headers
+    const headers = ["blox name", "quantity", "working", "non working"];
+    const csvData = [headers, ...data]; // Prepend headers to the data
 
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "assembled_blox.csv");
-            document.body.appendChild(link); // Required for Firefox
-            link.click(); // Trigger the download
-        }
+    const csvContent = "data:text/csv;charset=utf-8," 
+        + csvData.map(row => row.join(",")).join("\n");
 
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "assembled_blox.csv");
+    document.body.appendChild(link); // Required for Firefox
+    link.click(); // Trigger the download
+    document.body.removeChild(link); // Clean up
+}
 
         // // Event listener for when the DOM is fully loaded
         // document.addEventListener('DOMContentLoaded', function () {

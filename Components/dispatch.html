@@ -233,10 +233,10 @@
             const noteInput = document.getElementById("note");
 
             const pcbs = [
-                "Power",'Power USB', "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR", "Motor Driver" , 'Motor Driver 2Pin', "Wire Tap",'Wire Tap A',
+                "Power", 'Power USB', "Lamp", "Buzzer", "Invert", "Dark", "Distance", "IR", "Motor Driver", 'Motor Driver 2Pin', "Wire Tap", 'Wire Tap A',
                 "Button", "AI", "Wifi Clip V1", "Wifi Clip V2", "Servo", "Logic Gate", "Toggle", "Touch",
                 "Laser", "Solar", "Heat", "New TX-RX", "Old TX-RX", "Magnet", "Record And Repeat",
-                "AI Chat", "Clap", "Tongee", 'Moisture'
+                "AI Chat", "Clap", "Tongee", 'Moisture','Accelero'
             ];
 
             pcbs.forEach(pcb => {
@@ -349,19 +349,25 @@
     try {
         // Fetch all documents from the "grades" collection
         const querySnapshot = await getDocs(collection(db, "grades"));
-        
-        // Convert querySnapshot to an array of objects with id and date
-        const dataArray = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            date: new Date(doc.data().date),
-            text: new Date(doc.data().date).toLocaleString()
-        }));
 
-        // Sort the array by date in descending order
+        // Convert querySnapshot to an array of objects with id and date
+        const dataArray = querySnapshot.docs.map(doc => {
+            const date = new Date(doc.data().date);
+            return {
+                id: doc.id,
+                date: date,
+                text: date.toLocaleString() // Display date as a string
+            };
+        });
+
+        // Sort the array by date in descending order (newest first)
         dataArray.sort((a, b) => b.date - a.date);
-        
+
         // Clear the current options in the dropdown
+        const dateDropdown = document.getElementById('dateDropdown');
         dateDropdown.innerHTML = "";
+
+        let mostRecentDate = null;
 
         // Create and append options to the dropdown
         dataArray.forEach((item, index) => {
@@ -369,19 +375,27 @@
             option.value = item.id;
             option.textContent = item.text;
 
-            // Highlight the newest entry
+            // Highlight the most recent entry (first item in the sorted array)
             if (index === 0) {
                 option.style.backgroundColor = "#dff0d8"; // Light green background
                 option.style.fontWeight = "bold";
+                mostRecentDate = item.id; // Track the most recent date's ID
             }
 
             dateDropdown.appendChild(option);
         });
 
-        // Optionally, set the newest entry as selected
-        if (dataArray.length > 0) {
-            dateDropdown.selectedIndex = 0;
+        // Optionally, set the most recent entry as selected
+        if (mostRecentDate) {
+            const options = dateDropdown.getElementsByTagName('option');
+            for (let option of options) {
+                if (option.value === mostRecentDate) {
+                    option.selected = true; // Select the most recent date
+                    break;
+                }
+            }
         }
+
     } catch (error) {
         console.error("Error loading data: ", error);
     }
@@ -404,7 +418,7 @@
                 cancelShowButton.style.display = "none";
             });
 
-          
+
             showDataButton.addEventListener("click", async function () {
                 const selectedDateId = dateDropdown.value;
                 if (selectedDateId) {
@@ -415,7 +429,7 @@
                             const data = docSnap.data();
 
                             // Table for PCBs
-                            
+
                             let pcbsTable = `
                             <p><strong>Note:</strong> ${data.note}</p>
                                 <table border="1">
